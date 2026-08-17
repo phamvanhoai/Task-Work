@@ -20,7 +20,13 @@ class WorkspaceController extends Controller
             ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END")
             ->orderBy('due_date')->paginate(10);
 
-        return view('tasks.mine', compact('tasks', 'statusCounts', 'overdueCount'));
+        return view('tasks.mine', [
+            'tasks' => $tasks,
+            'statusCounts' => $statusCounts,
+            'overdueCount' => $overdueCount,
+            'projects' => Project::orderBy('name')->get(),
+            'users' => User::orderBy('name')->get(),
+        ]);
     }
 
     public function calendar(): View

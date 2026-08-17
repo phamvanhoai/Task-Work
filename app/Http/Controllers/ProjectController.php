@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,7 +18,7 @@ class ProjectController extends Controller
             ->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('name', 'like', "%$v%")->orWhere('key', 'like', "%$v%")))
             ->when($request->status, fn ($q, $v) => $q->where('status', $v))->latest()->paginate(12)->withQueryString();
 
-        return view('projects.index', compact('projects'));
+        return view('projects.index', ['projects' => $projects, 'users' => User::orderBy('name')->get()]);
     }
 
     public function create(): View
@@ -42,8 +43,14 @@ class ProjectController extends Controller
         return view('projects.show', compact('project'));
     }
 
-    public function edit(Project $project): View
+    public function edit(Request $request, Project $project): View|JsonResponse
     {
+        if ($request->expectsJson()) {
+            $project->load('members');
+
+            return response()->json($project);
+        }
+
         return view('projects.form', ['project' => $project, 'users' => User::orderBy('name')->get()]);
     }
 

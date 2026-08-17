@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -22,6 +23,7 @@ class TaskController extends Controller
         return view('tasks.index', [
             'tasks' => $tasks,
             'projects' => Project::orderBy('name')->get(),
+            'users' => User::orderBy('name')->get(),
             'statusCounts' => Task::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
             'overdueCount' => Task::whereDate('due_date', '<', today())->where('status', '!=', 'done')->count(),
         ]);
@@ -39,8 +41,12 @@ class TaskController extends Controller
         return redirect()->route('tasks.index')->with('success', 'Đã tạo công việc.');
     }
 
-    public function edit(Task $task): View
+    public function edit(Request $request, Task $task): View|JsonResponse
     {
+        if ($request->expectsJson()) {
+            return response()->json($task);
+        }
+
         return view('tasks.form', ['task' => $task, 'projects' => Project::orderBy('name')->get(), 'users' => User::orderBy('name')->get()]);
     }
 

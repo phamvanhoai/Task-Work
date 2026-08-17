@@ -10,4 +10,12 @@ for (const [name, path] of Object.entries({ dashboard: '/dashboard', 'task-cua-t
     await page.goto(`http://127.0.0.1:8000${path}`);
     await page.screenshot({ path: `storage/app/${name}-current.png`, fullPage: false });
 }
+await page.goto('http://127.0.0.1:8000/tasks');
+await page.locator('a[href$="/tasks/create"]').first().click();
+await page.waitForTimeout(250);
+await page.screenshot({ path: 'storage/app/task-modal-current.png', fullPage: false });
+await page.goto('http://127.0.0.1:8000/projects');
+await page.locator('a[href$="/projects/create"]').first().click();
+await page.waitForTimeout(250);
+await page.screenshot({ path: 'storage/app/project-modal-current.png', fullPage: false });
 await browser.close();
