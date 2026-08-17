@@ -15,6 +15,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/my-tasks', [WorkspaceController::class, 'myTasks'])->name('tasks.mine');
+    Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.status');
     Route::resource('projects', ProjectController::class);
     Route::resource('tasks', TaskController::class)->except('show');
     Route::get('/calendar', [WorkspaceController::class, 'calendar'])->name('calendar');

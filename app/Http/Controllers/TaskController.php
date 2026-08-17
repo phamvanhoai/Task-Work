@@ -90,6 +90,17 @@ class TaskController extends Controller
         return redirect()->route('tasks.index')->with('success', 'Đã cập nhật công việc.');
     }
 
+    public function updateStatus(Request $request, Task $task): JsonResponse
+    {
+        $data = $request->validate(['status' => ['required', Rule::in(['todo', 'in_progress', 'review', 'done'])]]);
+        $task->update([
+            'status' => $data['status'],
+            'completed_at' => $data['status'] === 'done' ? ($task->completed_at ?? now()) : null,
+        ]);
+
+        return response()->json(['message' => 'Đã cập nhật trạng thái.', 'status' => $task->status]);
+    }
+
     public function destroy(Task $task): RedirectResponse
     {
         $task->delete();

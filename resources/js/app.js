@@ -194,4 +194,69 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
         URL.revokeObjectURL(link.href);
     });
+
+    const kanban = document.querySelector('.task-kanban');
+    if (kanban) {
+        let draggedCard = null;
+        const updateKanbanCounts = () => document.querySelectorAll('.kanban-column').forEach((column) => {
+            const count = column.querySelectorAll('.kanban-task').length;
+            column.querySelector('header b').textContent = count;
+            column.querySelector('.kanban-empty')?.remove();
+            if (!count) {
+                const empty = Object.assign(document.createElement('p'), { className: 'kanban-empty', textContent: 'Không có task' });
+                column.querySelector('.kanban-list').appendChild(empty);
+            }
+        });
+        const showToast = (message, error = false) => {
+            const toast = Object.assign(document.createElement('div'), { className: `ui-toast ${error ? 'error' : 'success'}`, textContent: message });
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 200); }, 2200);
+        };
+
+        kanban.addEventListener('dragstart', (event) => {
+            draggedCard = event.target.closest('.kanban-task');
+            if (!draggedCard) return;
+            draggedCard.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', draggedCard.dataset.taskId);
+        });
+        kanban.addEventListener('dragend', () => {
+            draggedCard?.classList.remove('dragging');
+            document.querySelectorAll('.kanban-column.drag-over').forEach((column) => column.classList.remove('drag-over'));
+            draggedCard = null;
+        });
+        document.querySelectorAll('.kanban-column').forEach((column) => {
+            column.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                column.classList.add('drag-over');
+            });
+            column.addEventListener('dragleave', (event) => {
+                if (!column.contains(event.relatedTarget)) column.classList.remove('drag-over');
+            });
+            column.addEventListener('drop', async (event) => {
+                event.preventDefault();
+                column.classList.remove('drag-over');
+                if (!draggedCard || draggedCard.closest('.kanban-column') === column) return;
+                const originalList = draggedCard.parentElement;
+                const targetList = column.querySelector('.kanban-list');
+                targetList.appendChild(draggedCard);
+                updateKanbanCounts();
+                try {
+                    const response = await fetch(draggedCard.dataset.statusUrl, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                        body: JSON.stringify({ status: column.dataset.kanbanStatus }),
+                    });
+                    if (!response.ok) throw new Error('Update failed');
+                    showToast('Đã cập nhật trạng thái task.');
+                } catch {
+                    originalList.appendChild(draggedCard);
+                    updateKanbanCounts();
+                    showToast('Không thể cập nhật trạng thái. Vui lòng thử lại.', true);
+                }
+            });
+        });
+    }
 });
