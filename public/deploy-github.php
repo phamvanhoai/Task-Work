@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$secret = trim((string) @file_get_contents('/etc/taskwork-webhook-secret'));
+$secret = trim((string) @file_get_contents(__DIR__.'/../storage/app/.webhook-secret'));
 $payload = (string) file_get_contents('php://input');
 $signature = (string) ($_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '');
 $expected = 'sha256='.hash_hmac('sha256', $payload, $secret);
