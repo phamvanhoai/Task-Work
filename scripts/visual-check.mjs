@@ -20,6 +20,11 @@ await Promise.all([page.waitForURL('**/tasks?**project_id=**'), page.locator('.t
 const filteredTotal = Number(await page.locator('.summary-card.all b').textContent());
 if (filteredTotal >= unfilteredTotal) throw new Error('Task summary did not update after filtering');
 await page.screenshot({ path: 'storage/app/task-filtered-current.png', fullPage: false });
+await page.goto('http://127.0.0.1:8000/tasks?due=today');
+for (const dueDate of await page.locator('.task-reference-table tbody tr td:nth-child(7)').allTextContents()) {
+    if (!dueDate.includes('18/08/2026')) throw new Error(`Today filter returned another date: ${dueDate}`);
+}
+await page.screenshot({ path: 'storage/app/task-today-current.png', fullPage: false });
 await page.goto('http://127.0.0.1:8000/tasks');
 await page.locator('.summary-card.red').click();
 await page.waitForURL('**/tasks?**overdue=1**');

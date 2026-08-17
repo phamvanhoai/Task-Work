@@ -20,12 +20,20 @@ class TaskController extends Controller
         $statisticsQuery = Task::query()
             ->when($request->search, fn ($q, $v) => $q->where('title', 'like', "%$v%"))
             ->when($request->priority, fn ($q, $v) => $q->where('priority', $v))
-            ->when($request->project_id, fn ($q, $v) => $q->where('project_id', $v));
+            ->when($request->project_id, fn ($q, $v) => $q->where('project_id', $v))
+            ->when($request->due === 'today', fn ($q) => $q->whereDate('due_date', today()))
+            ->when($request->due === 'tomorrow', fn ($q) => $q->whereDate('due_date', today()->addDay()))
+            ->when($request->due === 'week', fn ($q) => $q->whereBetween('due_date', [today()->startOfWeek(), today()->endOfWeek()]))
+            ->when($request->due === 'none', fn ($q) => $q->whereNull('due_date'));
         $tasks = Task::with(['project', 'assignee'])
             ->when($request->search, fn ($q, $v) => $q->where('title', 'like', "%$v%"))
             ->when($request->status, fn ($q, $v) => $q->where('status', $v))
             ->when($request->priority, fn ($q, $v) => $q->where('priority', $v))
             ->when($request->project_id, fn ($q, $v) => $q->where('project_id', $v))
+            ->when($request->due === 'today', fn ($q) => $q->whereDate('due_date', today()))
+            ->when($request->due === 'tomorrow', fn ($q) => $q->whereDate('due_date', today()->addDay()))
+            ->when($request->due === 'week', fn ($q) => $q->whereBetween('due_date', [today()->startOfWeek(), today()->endOfWeek()]))
+            ->when($request->due === 'none', fn ($q) => $q->whereNull('due_date'))
             ->when($request->boolean('overdue'), fn ($q) => $q->whereDate('due_date', '<', today())->where('status', '!=', 'done'));
         match ($sort) {
             'oldest' => $tasks->oldest(),

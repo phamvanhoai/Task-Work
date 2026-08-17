@@ -16,13 +16,21 @@ class WorkspaceController extends Controller
         $perPage = in_array((int) $request->per_page, [10, 20, 50], true) ? (int) $request->per_page : 10;
         $baseQuery = Task::where('assignee_id', $request->user()->id)
             ->when($request->priority, fn ($query, $priority) => $query->where('priority', $priority))
-            ->when($request->project_id, fn ($query, $projectId) => $query->where('project_id', $projectId));
+            ->when($request->project_id, fn ($query, $projectId) => $query->where('project_id', $projectId))
+            ->when($request->due === 'today', fn ($query) => $query->whereDate('due_date', today()))
+            ->when($request->due === 'tomorrow', fn ($query) => $query->whereDate('due_date', today()->addDay()))
+            ->when($request->due === 'week', fn ($query) => $query->whereBetween('due_date', [today()->startOfWeek(), today()->endOfWeek()]))
+            ->when($request->due === 'none', fn ($query) => $query->whereNull('due_date'));
         $statusCounts = (clone $baseQuery)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
         $overdueCount = (clone $baseQuery)->whereDate('due_date', '<', today())->where('status', '!=', 'done')->count();
         $tasks = Task::with(['project', 'assignee'])->where('assignee_id', $request->user()->id)
             ->when($request->status, fn ($query, $status) => $query->where('status', $status))
             ->when($request->priority, fn ($query, $priority) => $query->where('priority', $priority))
             ->when($request->project_id, fn ($query, $projectId) => $query->where('project_id', $projectId))
+            ->when($request->due === 'today', fn ($query) => $query->whereDate('due_date', today()))
+            ->when($request->due === 'tomorrow', fn ($query) => $query->whereDate('due_date', today()->addDay()))
+            ->when($request->due === 'week', fn ($query) => $query->whereBetween('due_date', [today()->startOfWeek(), today()->endOfWeek()]))
+            ->when($request->due === 'none', fn ($query) => $query->whereNull('due_date'))
             ->when($request->boolean('overdue'), fn ($query) => $query->whereDate('due_date', '<', today())->where('status', '!=', 'done'));
         match ($sort) {
             'oldest' => $tasks->oldest(),
