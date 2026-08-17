@@ -17,6 +17,10 @@ class TaskController extends Controller
     {
         $sort = in_array($request->sort, ['newest', 'oldest', 'due_asc', 'due_desc', 'priority'], true) ? $request->sort : 'newest';
         $perPage = in_array((int) $request->per_page, [10, 20, 50], true) ? (int) $request->per_page : 10;
+        $statisticsQuery = Task::query()
+            ->when($request->search, fn ($q, $v) => $q->where('title', 'like', "%$v%"))
+            ->when($request->priority, fn ($q, $v) => $q->where('priority', $v))
+            ->when($request->project_id, fn ($q, $v) => $q->where('project_id', $v));
         $tasks = Task::with(['project', 'assignee'])
             ->when($request->search, fn ($q, $v) => $q->where('title', 'like', "%$v%"))
             ->when($request->status, fn ($q, $v) => $q->where('status', $v))
@@ -36,8 +40,8 @@ class TaskController extends Controller
             'tasks' => $tasks,
             'projects' => Project::orderBy('name')->get(),
             'users' => User::orderBy('name')->get(),
-            'statusCounts' => Task::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
-            'overdueCount' => Task::whereDate('due_date', '<', today())->where('status', '!=', 'done')->count(),
+            'statusCounts' => (clone $statisticsQuery)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
+            'overdueCount' => (clone $statisticsQuery)->whereDate('due_date', '<', today())->where('status', '!=', 'done')->count(),
             'sort' => $sort,
             'perPage' => $perPage,
         ]);

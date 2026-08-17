@@ -14,7 +14,9 @@ class WorkspaceController extends Controller
     {
         $sort = in_array($request->sort, ['newest', 'oldest', 'due_asc', 'due_desc', 'priority'], true) ? $request->sort : 'newest';
         $perPage = in_array((int) $request->per_page, [10, 20, 50], true) ? (int) $request->per_page : 10;
-        $baseQuery = Task::where('assignee_id', $request->user()->id);
+        $baseQuery = Task::where('assignee_id', $request->user()->id)
+            ->when($request->priority, fn ($query, $priority) => $query->where('priority', $priority))
+            ->when($request->project_id, fn ($query, $projectId) => $query->where('project_id', $projectId));
         $statusCounts = (clone $baseQuery)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
         $overdueCount = (clone $baseQuery)->whereDate('due_date', '<', today())->where('status', '!=', 'done')->count();
         $tasks = Task::with(['project', 'assignee'])->where('assignee_id', $request->user()->id)
