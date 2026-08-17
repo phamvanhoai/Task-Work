@@ -181,4 +181,17 @@ document.addEventListener('DOMContentLoaded', () => {
         panel?.classList.toggle('open');
         button.classList.toggle('active', panel?.classList.contains('open'));
     }));
+    document.querySelector('[data-density-toggle]')?.addEventListener('click', (event) => {
+        document.querySelector('.task-data-card')?.classList.toggle('dense');
+        event.currentTarget.classList.toggle('active');
+    });
+    document.querySelector('[data-export-table]')?.addEventListener('click', () => {
+        const rows = [...document.querySelectorAll('.task-reference-table tr')].map((row) =>
+            [...row.querySelectorAll('th,td')].slice(1, -1).map((cell) => `"${cell.innerText.trim().replaceAll('"', '""')}"`).join(','),
+        );
+        const blob = new Blob([`\uFEFF${rows.join('\n')}`], { type: 'text/csv;charset=utf-8' });
+        const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'danh-sach-task.csv' });
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
 });

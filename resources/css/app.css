@@ -144,6 +144,27 @@
 }
 @keyframes filter-in { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
 @layer components {
+    .page-tasks-index .task-toolbar { @apply h-[73px] items-start pt-1.5; }
+    .task-toolbar-actions { @apply flex items-center gap-3; }
+    .task-create-button { @apply h-11 min-w-36 justify-center shadow-md shadow-brand-200; }
+    .page-tasks-index .summary-card { @apply w-[120px] px-4 text-xs; }
+    .page-tasks-index .summary-card b { @apply mt-1.5 text-lg; }
+    .page-tasks-index .task-summary { @apply gap-3.5; }
+    .page-tasks-index .task-reference-table th { @apply h-[52px] px-4 text-xs font-medium; }
+    .page-tasks-index .task-reference-table td { @apply h-[66px] px-4 text-xs; }
+    .page-tasks-index .task-reference-table td:nth-child(2) { @apply text-[13px]; }
+    .task-title-link { @apply inline-flex items-center gap-2.5; }
+    .task-comments { @apply inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-normal text-slate-400; }
+    .task-comments svg { @apply size-3.5; }
+    .page-tasks-index .badge { @apply inline-flex items-center gap-2; }
+    .page-tasks-index .badge svg { @apply size-3.5 rounded-full bg-emerald-100 p-0.5; }
+    .status-dot { @apply size-1.5 rounded-full bg-current; }
+    .summary-icon-button { @apply grid size-11 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-blue-300 hover:bg-brand-50 hover:text-brand-600; }
+    .summary-icon-button svg { @apply size-4; }
+    .summary-icon-button.active { @apply border-brand-500 bg-brand-50 text-brand-600 ring-2 ring-brand-100; }
+    .task-data-card.dense .task-reference-table td { @apply h-[54px]; }
+}
+@layer components {
     .main-nav a { @apply text-sm; }
     .side-title { @apply text-[11px]; }
     .sidebar-projects>a { @apply text-xs; }
