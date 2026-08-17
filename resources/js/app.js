@@ -3,7 +3,7 @@ import {
     Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleAlert, CircleCheckBig,
     ClipboardCheck, Clock3, Columns3, createIcons, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
     ListFilter, Menu, MessageSquare, MoreVertical, PanelLeftClose, Pencil, Play, Plus, Search, Settings, Share2,
-    Save, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, TriangleAlert, UserPlus, Users, X,
+    Save, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, Trash2, TriangleAlert, UserPlus, Users, X,
 } from 'lucide';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleAlert, CircleCheckBig,
         ClipboardCheck, Clock3, Columns3, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
         ListFilter, Menu, MessageSquare, MoreVertical, PanelLeftClose, Pencil, Play, Plus, Search, Settings, Share2,
-        Save, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, TriangleAlert, UserPlus, Users, X,
+        Save, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, Trash2, TriangleAlert, UserPlus, Users, X,
     } });
     const button = document.querySelector('.mobile-menu');
     const sidebar = document.querySelector('.app-sidebar');
@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const method = document.querySelector('#task-method');
     const modalTitle = document.querySelector('#task-modal-title');
     const submitLabel = document.querySelector('#task-submit-label');
+    const taskDelete = document.querySelector('#task-delete');
     const storeAction = taskForm?.action;
 
     const openTaskModal = async (link) => {
@@ -53,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             taskForm.action = storeAction;
             modalTitle.textContent = 'Tạo task mới';
             submitLabel.textContent = 'Tạo task';
+            taskDelete.hidden = true;
         } else {
             const response = await fetch(link.href, { headers: { Accept: 'application/json' } });
             const task = await response.json();
@@ -60,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             method?.removeAttribute('disabled');
             modalTitle.textContent = 'Cập nhật task';
             submitLabel.textContent = 'Lưu thay đổi';
+            taskDelete.hidden = false;
+            taskDelete.dataset.action = taskForm.action;
             for (const field of ['title', 'project_id', 'assignee_id', 'status', 'priority', 'due_date', 'description']) {
                 const input = taskForm.elements.namedItem(field);
                 if (input) input.value = field === 'due_date' && task[field] ? task[field].slice(0, 10) : (task[field] ?? '');
@@ -84,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const projectMethod = document.querySelector('#project-method');
     const projectTitle = document.querySelector('#project-modal-title');
     const projectSubmit = document.querySelector('#project-submit-label');
+    const projectDelete = document.querySelector('#project-delete');
     const projectStoreAction = projectForm?.action;
     const openProjectModal = async (link) => {
         projectForm?.reset();
@@ -92,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             projectForm.action = projectStoreAction;
             projectTitle.textContent = 'Tạo dự án mới';
             projectSubmit.textContent = 'Tạo dự án';
+            projectDelete.hidden = true;
         } else {
             const response = await fetch(link.href, { headers: { Accept: 'application/json' } });
             const project = await response.json();
@@ -99,6 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
             projectMethod?.removeAttribute('disabled');
             projectTitle.textContent = 'Cập nhật dự án';
             projectSubmit.textContent = 'Lưu thay đổi';
+            projectDelete.hidden = false;
+            projectDelete.dataset.action = projectForm.action;
             for (const field of ['name', 'key', 'owner_id', 'status', 'priority', 'start_date', 'due_date', 'description']) {
                 const input = projectForm.elements.namedItem(field);
                 if (input) input.value = ['start_date', 'due_date'].includes(field) && project[field] ? project[field].slice(0, 10) : (project[field] ?? '');
@@ -115,4 +123,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
     projectModal?.querySelectorAll('[data-modal-close]').forEach((button) => button.addEventListener('click', () => projectModal.close()));
     projectModal?.addEventListener('click', (event) => { if (event.target === projectModal) projectModal.close(); });
+
+    const submitDelete = (button, message) => {
+        if (!button?.dataset.action || !window.confirm(message)) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = button.dataset.action;
+        form.innerHTML = `<input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}"><input type="hidden" name="_method" value="DELETE">`;
+        document.body.appendChild(form);
+        form.submit();
+    };
+    taskDelete?.addEventListener('click', () => submitDelete(taskDelete, 'Xóa task này? Hành động không thể hoàn tác.'));
+    projectDelete?.addEventListener('click', () => submitDelete(projectDelete, 'Xóa dự án và toàn bộ task bên trong? Hành động không thể hoàn tác.'));
 });
