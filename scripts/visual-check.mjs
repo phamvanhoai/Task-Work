@@ -11,6 +11,16 @@ for (const [name, path] of Object.entries({ dashboard: '/dashboard', 'task-cua-t
     await page.screenshot({ path: `storage/app/${name}-current.png`, fullPage: false });
 }
 await page.goto('http://127.0.0.1:8000/tasks');
+await page.goto('http://127.0.0.1:8000/tasks?view=kanban');
+if (await page.locator('.kanban-column').count() !== 4) throw new Error('Kanban columns are missing');
+await page.screenshot({ path: 'storage/app/task-kanban-current.png', fullPage: false });
+await page.goto('http://127.0.0.1:8000/tasks?view=gantt');
+await page.locator('.task-gantt').waitFor({ state: 'visible' });
+await page.screenshot({ path: 'storage/app/task-gantt-current.png', fullPage: false });
+await page.goto('http://127.0.0.1:8000/tasks?search=dashboard');
+await page.locator('.search-reset').click();
+await page.waitForURL((url) => !url.searchParams.has('search'));
+await page.goto('http://127.0.0.1:8000/tasks');
 await page.locator('[data-filter-toggle]').click();
 await page.locator('.task-filter-form.open').waitFor({ state: 'visible' });
 await page.screenshot({ path: 'storage/app/task-filter-current.png', fullPage: false });

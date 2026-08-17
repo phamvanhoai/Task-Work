@@ -16,7 +16,11 @@ class TaskController extends Controller
     public function index(Request $request): View
     {
         $sort = in_array($request->sort, ['newest', 'oldest', 'due_asc', 'due_desc', 'priority'], true) ? $request->sort : 'newest';
+        $viewMode = in_array($request->view, ['list', 'kanban', 'gantt'], true) ? $request->view : 'list';
         $perPage = in_array((int) $request->per_page, [10, 20, 50], true) ? (int) $request->per_page : 10;
+        if ($viewMode !== 'list') {
+            $perPage = 50;
+        }
         $statisticsQuery = Task::query()
             ->when($request->search, fn ($q, $v) => $q->where('title', 'like', "%$v%"))
             ->when($request->priority, fn ($q, $v) => $q->where('priority', $v))
@@ -52,6 +56,7 @@ class TaskController extends Controller
             'overdueCount' => (clone $statisticsQuery)->whereDate('due_date', '<', today())->where('status', '!=', 'done')->count(),
             'sort' => $sort,
             'perPage' => $perPage,
+            'viewMode' => $viewMode,
         ]);
     }
 
