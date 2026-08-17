@@ -110,6 +110,51 @@
 
 .chart-key { @apply text-center text-[8px] text-slate-500; }.chart-key i { @apply inline-block size-2 rounded-full bg-emerald-500; }.distribution { @apply flex items-center gap-4; }.distribution .donut { @apply shrink-0; }.distribution p { @apply my-2 text-[8px] text-slate-600; }
 @layer components { .toggle { @apply relative h-5 w-9 rounded-full bg-brand-600 after:absolute after:right-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:shadow; } }
+@layer components {
+    .main-nav a { @apply text-sm; }
+    .side-title { @apply text-[11px]; }
+    .sidebar-projects>a { @apply text-xs; }
+    .upgrade-card h3 { @apply text-sm; }
+    .upgrade-card p { @apply text-xs leading-5; }
+    .upgrade-card button { @apply text-xs; }
+    .top-search input { @apply text-sm; }
+    .user-meta b { @apply text-xs; }
+    .user-meta small { @apply text-[11px]; }
+    .page-heading p { @apply text-[13px]; }
+    .panel-head h2,.card-head h3,.section-title { @apply text-sm; }
+    .panel-head p { @apply text-xs; }
+    .panel-head a,.card-head a { @apply text-xs; }
+    .metric-card small,.stats small { @apply text-xs; }
+    .metric-card em,.stats em { @apply text-[11px]; }
+    .kanban-head { @apply text-xs; }
+    .task-mini { @apply p-3.5; }
+    .task-mini h4 { @apply text-[13px] leading-5; }
+    .tag { @apply text-[11px]; }
+    .task-mini-footer,.add-task { @apply text-[11px]; }
+    .deadline-item { @apply text-[11px] leading-4; }
+    .activity-row p { @apply text-xs leading-5; }
+    .activity-row small { @apply text-[11px]; }
+    .popular-tags span { @apply text-[11px]; }
+    .filters input,.filters select,.search-field input { @apply text-[13px]; }
+    .project-card p { @apply text-xs leading-5; }
+    .card-meta,.owner,.project-key { @apply text-[11px]; }
+    .table-panel th,.task-reference-table th { @apply text-[11px]; }
+    .table-panel td,.task-reference-table td { @apply text-xs leading-5; }
+    .task-reference-table td { @apply h-[72px]; }
+    .task-reference-table td:nth-child(2) { @apply text-[13px]; }
+    .task-label,.priority,.badge { @apply text-[11px]; }
+    .task-summary>div:not(.summary-actions) { @apply text-xs; }
+    .status-tabs a,.view-tabs a,.view-switch a { @apply text-xs; }
+    .reference-pager { @apply text-[11px]; }
+    .form label,.settings-card label { @apply text-xs; }
+    .calendar-toolbar h2 { @apply text-base; }
+    .week-header>span,.week-header>div,.time-slot>span { @apply text-[11px]; }
+    .calendar-event { @apply text-[10px] leading-4; }
+    .bar-row,.ranking,.label-pill,.label-rank { @apply text-xs; }
+    .settings-nav h4 { @apply text-[11px]; }
+    .settings-nav a,.setting-row b { @apply text-xs; }
+    .setting-row small { @apply text-[11px]; }
+}
 body:not(.page-dashboard) .top-search { visibility:hidden; }
 body:not(.page-dashboard) .page-content { margin-top:-69px; padding-top:0; }
 body:not(.page-dashboard) .page-heading { position:relative; z-index:30; height:69px; margin-bottom:0; }
