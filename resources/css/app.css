@@ -110,6 +110,7 @@
 
 .chart-key { @apply text-center text-[8px] text-slate-500; }.chart-key i { @apply inline-block size-2 rounded-full bg-emerald-500; }.distribution { @apply flex items-center gap-4; }.distribution .donut { @apply shrink-0; }.distribution p { @apply my-2 text-[8px] text-slate-600; }
 @layer components { .toggle { @apply relative h-5 w-9 rounded-full bg-brand-600 after:absolute after:right-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:shadow; } }
+@layer components { .icon-text { @apply inline-flex items-center gap-1.5; }.icon-text svg { @apply size-3.5 shrink-0; }.btn svg { @apply size-4; }.metric-icon svg { @apply size-5; }.tf-logo svg { @apply size-[18px]; }.task-search label>svg { @apply size-4 shrink-0; } }
 @layer components {
     .main-nav a { @apply text-sm; }
     .side-title { @apply text-[11px]; }

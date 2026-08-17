@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('title','Tất cả task · TaskFlow')
 @section('heading')Tất cả task　<span class="heading-count">{{ $tasks->total() }}</span>@endsection
-@section('actions')<a class="btn primary" href="{{ route('tasks.create') }}">＋　Tạo task</a>@endsection
+@section('actions')<a class="btn primary" href="{{ route('tasks.create') }}"><i data-lucide="plus"></i>Tạo task</a>@endsection
 @section('content')
-<div class="task-toolbar"><div class="view-switch"><a class="active">▤　Danh sách</a><a>▥　Bảng Kanban</a><a href="{{ route('calendar') }}">▣　Lịch</a><a>⌁　Gantt</a></div><form class="task-search"><label>⌕<input name="search" value="{{ request('search') }}" placeholder="Tìm kiếm task..."></label><button class="btn secondary">☷　Bộ lọc</button></form></div>
+<div class="task-toolbar"><div class="view-switch"><a class="active icon-text"><i data-lucide="list"></i>Danh sách</a><a class="icon-text"><i data-lucide="columns-3"></i>Bảng Kanban</a><a class="icon-text" href="{{ route('calendar') }}"><i data-lucide="calendar-days"></i>Lịch</a><a class="icon-text"><i data-lucide="git-branch"></i>Gantt</a></div><form class="task-search"><label><i data-lucide="search"></i><input name="search" value="{{ request('search') }}" placeholder="Tìm kiếm task..."></label><button class="btn secondary"><i data-lucide="sliders-horizontal"></i>Bộ lọc</button></form></div>
 <section class="task-data-card"><div class="task-summary">
     @foreach([['Tất cả',$tasks->total(),'all'],['Việc cần làm',$statusCounts['todo']??0,''],['Đang thực hiện',$statusCounts['in_progress']??0,'blue'],['Đang review',$statusCounts['review']??0,'orange'],['Hoàn thành',$statusCounts['done']??0,'green'],['Quá hạn',$overdueCount,'red']] as [$label,$count,$class])<div class="{{ $class }}"><span>{{ $label }}</span><b>{{ $count }}</b></div>@endforeach
     <div class="summary-actions"><button>Sắp xếp:　<b>Mới nhất⌄</b></button><button>⇩</button><button>⚙</button></div>

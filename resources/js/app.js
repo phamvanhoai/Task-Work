@@ -1,6 +1,18 @@
 import './bootstrap';
+import {
+    Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleCheckBig,
+    Clock3, Columns3, createIcons, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
+    Menu, MessageSquare, PanelLeftClose, Plus, Search, Settings, Share2,
+    SlidersHorizontal, SquareCheckBig, Table2, Tag, TriangleAlert, UserPlus, Users,
+} from 'lucide';
 
 document.addEventListener('DOMContentLoaded', () => {
+    createIcons({ icons: {
+        Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleCheckBig,
+        Clock3, Columns3, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks, Menu,
+        MessageSquare, PanelLeftClose, Plus, Search, Settings, Share2,
+        SlidersHorizontal, SquareCheckBig, Table2, Tag, TriangleAlert, UserPlus, Users,
+    } });
     const button = document.querySelector('.mobile-menu');
     const sidebar = document.querySelector('.app-sidebar');
     const shell = document.querySelector('.app-shell');

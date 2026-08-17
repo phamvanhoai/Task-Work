@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title','Lịch · TaskFlow') @section('heading','Lịch công việc') @section('subtitle','Theo dõi thời hạn công việc theo tuần.')
-@section('actions')<button class="btn secondary">Hôm nay</button><a class="btn primary" href="{{ route('tasks.create') }}">＋ Công việc</a>@endsection
+@section('actions')<button class="btn secondary">Hôm nay</button><a class="btn primary" href="{{ route('tasks.create') }}"><i data-lucide="plus"></i>Công việc</a>@endsection
 @section('content')
 @php
     $start = now()->startOfWeek();

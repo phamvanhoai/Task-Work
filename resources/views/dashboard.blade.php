@@ -2,7 +2,7 @@
 @section('title','Tổng quan · TaskFlow')
 @section('heading','Xin chào, '.auth()->user()->name.'! 👋')
 @section('subtitle','Đây là tổng quan công việc của bạn hôm nay.')
-@section('actions')<button class="btn secondary">⇧ Chia sẻ</button><a class="btn primary" href="{{ route('tasks.create') }}">＋ Tạo task</a>@endsection
+@section('actions')<button class="btn secondary"><i data-lucide="share-2"></i> Chia sẻ</button><a class="btn primary" href="{{ route('tasks.create') }}"><i data-lucide="plus"></i> Tạo task</a>@endsection
 @section('content')
 @php
     $displayTasks = $myTasks->values();
@@ -15,10 +15,10 @@
 @endphp
 <div class="dashboard-layout"><div class="dashboard-main">
     <section class="metric-grid">
-        <article class="metric-card"><span class="metric-icon blue">▣</span><div><small>Tổng task</small><strong>{{ $taskCount ?: 128 }}</strong><em class="up">↑ 12% <span>so với tuần trước</span></em></div></article>
-        <article class="metric-card"><span class="metric-icon green">❉</span><div><small>Hoàn thành</small><strong>{{ $doneTaskCount ?: 76 }}</strong><em class="up">↑ 8% <span>so với tuần trước</span></em></div><span class="metric-ring">59%</span></article>
-        <article class="metric-card"><span class="metric-icon orange">◷</span><div><small>Đang thực hiện</small><strong>{{ $taskCount ? $myTasks->where('status','in_progress')->count() : 32 }}</strong><em>→ 0% <span>so với tuần trước</span></em></div></article>
-        <article class="metric-card"><span class="metric-icon purple">▲</span><div><small>Quá hạn</small><strong>{{ $overdueCount ?: 20 }}</strong><em class="down">↑ 25% <span>so với tuần trước</span></em></div></article>
+        <article class="metric-card"><span class="metric-icon blue"><i data-lucide="list-checks"></i></span><div><small>Tổng task</small><strong>{{ $taskCount ?: 128 }}</strong><em class="up">↑ 12% <span>so với tuần trước</span></em></div></article>
+        <article class="metric-card"><span class="metric-icon green"><i data-lucide="circle-check-big"></i></span><div><small>Hoàn thành</small><strong>{{ $doneTaskCount ?: 76 }}</strong><em class="up">↑ 8% <span>so với tuần trước</span></em></div><span class="metric-ring">59%</span></article>
+        <article class="metric-card"><span class="metric-icon orange"><i data-lucide="clock-3"></i></span><div><small>Đang thực hiện</small><strong>{{ $taskCount ? $myTasks->where('status','in_progress')->count() : 32 }}</strong><em>→ 0% <span>so với tuần trước</span></em></div></article>
+        <article class="metric-card"><span class="metric-icon purple"><i data-lucide="triangle-alert"></i></span><div><small>Quá hạn</small><strong>{{ $overdueCount ?: 20 }}</strong><em class="down">↑ 25% <span>so với tuần trước</span></em></div></article>
     </section>
     <h2 class="section-title">Bảng task</h2>
     <section class="kanban">
@@ -26,9 +26,9 @@
         @php($items=$displayTasks->where('status',$status)->take(3))
         <div class="kanban-col {{ $class }}"><div class="kanban-head"><span>{{ $label }}</span><b>{{ $items->count() ?: $fallbacks->where('status',$status)->count() }}</b></div>
         @foreach(($items->count() ? $items : $fallbacks->where('status',$status)) as $task)
-            <article class="task-mini"><h4>{{ $task->title }}</h4><span class="tag {{ $status==='done'?'pink':($status==='review'?'green':($status==='in_progress'?'green':'')) }}">{{ $task instanceof \App\Models\Task ? $task->project->name : $task->tag }}</span><div class="task-mini-footer"><span class="mini-avatar">{{ mb_substr(auth()->user()->name,0,1) }}</span><span>▣ {{ $task instanceof \App\Models\Task ? ($task->due_date?->format('d/m') ?? '—') : $task->date }}</span></div></article>
+            <article class="task-mini"><h4>{{ $task->title }}</h4><span class="tag {{ $status==='done'?'pink':($status==='review'?'green':($status==='in_progress'?'green':'')) }}">{{ $task instanceof \App\Models\Task ? $task->project->name : $task->tag }}</span><div class="task-mini-footer"><span class="mini-avatar">{{ mb_substr(auth()->user()->name,0,1) }}</span><span class="icon-text"><i data-lucide="calendar-days"></i>{{ $task instanceof \App\Models\Task ? ($task->due_date?->format('d/m') ?? '—') : $task->date }}</span></div></article>
         @endforeach
-        <a class="add-task" href="{{ route('tasks.create') }}">＋ Thêm task</a></div>
+        <a class="add-task icon-text" href="{{ route('tasks.create') }}"><i data-lucide="plus"></i> Thêm task</a></div>
     @endforeach
     </section>
     <section class="chart-grid"><div class="panel fake-chart"><div class="card-head"><h3>Tiến độ công việc</h3><span class="badge">7 ngày qua⌄</span></div><div class="chart-key"><i></i> Hoàn thành　 <i></i> Tổng task</div><div class="line-chart"></div></div><div class="panel fake-chart"><div class="card-head"><h3>Phân bổ task theo dự án</h3></div><div class="distribution"><div class="donut" data-total="{{ $taskCount ?: 128 }}"></div><div><p>🔵 Website redesign　40%</p><p>🟢 Mobile App　　　25%</p><p>🟣 Marketing Campaign　15%</p><p>🟠 Product Launch　10%</p></div></div></div></section>
