@@ -10,6 +10,10 @@ for (const [name, path] of Object.entries({ dashboard: '/dashboard', 'task-cua-t
     await page.goto(`http://127.0.0.1:8000${path}`);
     await page.screenshot({ path: `storage/app/${name}-current.png`, fullPage: false });
 }
+await page.goto('http://127.0.0.1:8000/calendar?view=month');
+await page.locator('.month-calendar').waitFor({ state: 'visible' });
+await page.goto('http://127.0.0.1:8000/calendar?view=agenda');
+await page.locator('.calendar-agenda').waitFor({ state: 'visible' });
 await page.goto('http://127.0.0.1:8000/tasks');
 await page.goto('http://127.0.0.1:8000/tasks?view=kanban');
 if (await page.locator('.kanban-column').count() !== 4) throw new Error('Kanban columns are missing');

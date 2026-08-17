@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -52,9 +53,24 @@ class WorkspaceController extends Controller
         ]);
     }
 
-    public function calendar(): View
+    public function calendar(Request $request): View
     {
-        return view('workspace.calendar', ['tasks' => Task::with('project')->whereNotNull('due_date')->orderBy('due_date')->get()]);
+        $viewMode = in_array($request->view, ['week', 'month', 'agenda'], true) ? $request->view : 'week';
+        try {
+            $anchor = $request->filled('date') ? Carbon::createFromFormat('Y-m-d', $request->date)->startOfDay() : today();
+        } catch (\Throwable) {
+            $anchor = today();
+        }
+        $rangeStart = $viewMode === 'month' ? $anchor->copy()->startOfMonth()->startOfWeek() : $anchor->copy()->startOfWeek();
+        $rangeEnd = $viewMode === 'month' ? $anchor->copy()->endOfMonth()->endOfWeek() : ($viewMode === 'agenda' ? $anchor->copy()->addDays(30) : $anchor->copy()->endOfWeek());
+        $tasks = Task::with(['project', 'assignee'])->whereBetween('due_date', [$rangeStart, $rangeEnd])
+            ->when($request->project_id, fn ($query, $projectId) => $query->where('project_id', $projectId))->orderBy('due_date')->get();
+        $upcoming = Task::with('project')->whereDate('due_date', '>=', today())->orderBy('due_date')->limit(6)->get();
+
+        return view('workspace.calendar', [
+            'tasks' => $tasks, 'upcoming' => $upcoming, 'anchor' => $anchor, 'viewMode' => $viewMode,
+            'projects' => Project::orderBy('name')->get(), 'users' => User::orderBy('name')->get(),
+        ]);
     }
 
     public function reports(): View

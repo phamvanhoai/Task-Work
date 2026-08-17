@@ -264,4 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
         panel?.classList.toggle('open');
         event.currentTarget.classList.toggle('active', panel?.classList.contains('open'));
     });
+    document.querySelector('[data-calendar-filter]')?.addEventListener('click', (event) => {
+        const panel = document.querySelector('.calendar-filter-panel');
+        panel?.classList.toggle('open');
+        event.currentTarget.classList.toggle('active', panel?.classList.contains('open'));
+    });
 });
