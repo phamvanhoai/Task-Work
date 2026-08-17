@@ -259,4 +259,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+    document.querySelector('[data-project-filter-toggle]')?.addEventListener('click', (event) => {
+        const panel = document.querySelector('.project-filter-panel');
+        panel?.classList.toggle('open');
+        event.currentTarget.classList.toggle('active', panel?.classList.contains('open'));
+    });
 });

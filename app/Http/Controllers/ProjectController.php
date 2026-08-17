@@ -14,11 +14,30 @@ class ProjectController extends Controller
 {
     public function index(Request $request): View
     {
-        $projects = Project::with('owner')->withCount(['tasks', 'tasks as done_tasks_count' => fn ($q) => $q->where('status', 'done')])
+        $sort = in_array($request->sort, ['newest', 'oldest', 'due_asc', 'progress'], true) ? $request->sort : 'newest';
+        $perPage = in_array((int) $request->per_page, [6, 12, 24], true) ? (int) $request->per_page : 6;
+        $statisticsQuery = Project::query()
             ->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('name', 'like', "%$v%")->orWhere('key', 'like', "%$v%")))
-            ->when($request->status, fn ($q, $v) => $q->where('status', $v))->latest()->paginate(12)->withQueryString();
+            ->when($request->priority, fn ($q, $v) => $q->where('priority', $v));
+        $projects = Project::with(['owner', 'members'])->withCount(['tasks', 'tasks as done_tasks_count' => fn ($q) => $q->where('status', 'done')])
+            ->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('name', 'like', "%$v%")->orWhere('key', 'like', "%$v%")))
+            ->when($request->status, fn ($q, $v) => $q->where('status', $v))
+            ->when($request->priority, fn ($q, $v) => $q->where('priority', $v))
+            ->when($request->boolean('overdue'), fn ($q) => $q->whereDate('due_date', '<', today())->where('status', '!=', 'completed'));
+        match ($sort) {
+            'oldest' => $projects->oldest(),
+            'due_asc' => $projects->orderByRaw('due_date IS NULL')->orderBy('due_date'),
+            'progress' => $projects->orderByDesc('done_tasks_count'),
+            default => $projects->latest(),
+        };
+        $projects = $projects->paginate($perPage)->withQueryString();
 
-        return view('projects.index', ['projects' => $projects, 'users' => User::orderBy('name')->get()]);
+        return view('projects.index', [
+            'projects' => $projects, 'users' => User::orderBy('name')->get(),
+            'statusCounts' => (clone $statisticsQuery)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
+            'overdueCount' => (clone $statisticsQuery)->whereDate('due_date', '<', today())->where('status', '!=', 'completed')->count(),
+            'sort' => $sort, 'perPage' => $perPage,
+        ]);
     }
 
     public function create(): View
