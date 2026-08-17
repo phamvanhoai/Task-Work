@@ -1,17 +1,17 @@
 import './bootstrap';
 import {
-    Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleCheckBig,
-    Clock3, Columns3, createIcons, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
-    Menu, MessageSquare, PanelLeftClose, Plus, Search, Settings, Share2,
-    SlidersHorizontal, SquareCheckBig, Table2, Tag, TriangleAlert, UserPlus, Users,
+    Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleAlert, CircleCheckBig,
+    ClipboardCheck, Clock3, Columns3, createIcons, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
+    ListFilter, Menu, MessageSquare, MoreVertical, PanelLeftClose, Play, Plus, Search, Settings, Share2,
+    ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, TriangleAlert, UserPlus, Users,
 } from 'lucide';
 
 document.addEventListener('DOMContentLoaded', () => {
     createIcons({ icons: {
-        Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleCheckBig,
-        Clock3, Columns3, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks, Menu,
-        MessageSquare, PanelLeftClose, Plus, Search, Settings, Share2,
-        SlidersHorizontal, SquareCheckBig, Table2, Tag, TriangleAlert, UserPlus, Users,
+        Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleAlert, CircleCheckBig,
+        ClipboardCheck, Clock3, Columns3, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
+        ListFilter, Menu, MessageSquare, MoreVertical, PanelLeftClose, Play, Plus, Search, Settings, Share2,
+        ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, TriangleAlert, UserPlus, Users,
     } });
     const button = document.querySelector('.mobile-menu');
     const sidebar = document.querySelector('.app-sidebar');

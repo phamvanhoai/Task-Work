@@ -156,7 +156,20 @@
     .settings-nav a,.setting-row b { @apply text-xs; }
     .setting-row small { @apply text-[11px]; }
 }
+@layer components {
+    .page-tasks-mine .top-search { visibility:visible; margin-left:180px; width:420px; }
+    .page-tasks-mine .heading-actions { position:absolute; top:103px; right:28px; }
+    .mine-tabs { @apply flex h-20 items-end gap-7 border-b border-slate-200 pb-2; }
+    .mine-tabs a,.mine-tabs>span { @apply flex h-11 items-center gap-2 border-b-2 border-transparent px-1 text-xs text-slate-600; }
+    .mine-tabs a:hover,.mine-tabs a.active { @apply border-brand-600 text-brand-600; }
+    .mine-tabs svg { @apply size-4; }.mine-tabs b { @apply rounded-full bg-slate-100 px-2 py-0.5 text-[11px]; }.mine-tabs .overdue-tab { @apply text-red-500; }
+    .mine-tools { @apply flex h-[74px] items-center justify-end gap-3; }
+    .mine-stats { @apply mb-6 grid grid-cols-6 gap-3; }.mine-stats article { @apply flex h-[90px] items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm; }.mine-stats small,.mine-stats strong { @apply block; }.mine-stats small { @apply whitespace-nowrap text-xs text-slate-600; }.mine-stats strong { @apply mt-1 text-xl; }
+    .mine-stat-icon { @apply grid size-11 shrink-0 place-items-center rounded-lg; }.mine-stat-icon svg { @apply size-5; }.mine-stat-icon.blue { @apply bg-blue-50 text-blue-600; }.mine-stat-icon.slate { @apply bg-slate-100 text-slate-600; }.mine-stat-icon.orange { @apply bg-orange-50 text-orange-500; }.mine-stat-icon.green { @apply bg-emerald-50 text-emerald-600; }.mine-stat-icon.red { @apply bg-red-50 text-red-500; }
+    .mine-table { @apply overflow-hidden rounded-lg border border-slate-200 bg-white; }.mine-table table { @apply w-full min-w-[1050px] border-collapse; }.mine-table th { @apply h-12 bg-slate-50 px-4 text-left text-xs font-medium text-slate-600; }.mine-table td { @apply h-[60px] border-t border-slate-100 px-4 text-xs; }.mine-table td:nth-child(2) { @apply min-w-72 text-[13px]; }.mine-table input { @apply size-4; }.mine-table td:last-child svg { @apply size-4; }
+}
 body:not(.page-dashboard) .top-search { visibility:hidden; }
+body.page-tasks-mine .top-search { visibility:visible; }
 body:not(.page-dashboard) .page-content { margin-top:-69px; padding-top:0; }
 body:not(.page-dashboard) .page-heading { position:relative; z-index:30; height:69px; margin-bottom:0; }
 .page-tasks-index .heading-actions { position:absolute;top:76px;right:28px }.page-tasks-index .task-toolbar { padding-top:6px }.pager-buttons { display:flex;gap:6px }.pager-buttons a,.pager-buttons span { display:grid;width:30px;height:30px;place-items:center;border:1px solid #e2e8f0;border-radius:6px }.pager-buttons a.active { color:#315cf4;border-color:#315cf4;background:#eef4ff }

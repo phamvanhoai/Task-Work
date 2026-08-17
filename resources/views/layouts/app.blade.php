@@ -7,7 +7,7 @@
         <div class="sidebar-brand-row"><a class="tf-brand" href="{{ route('dashboard') }}"><span class="tf-logo"><i data-lucide="check"></i></span><b>TaskFlow</b></a><button class="sidebar-collapse" type="button" aria-label="Thu gọn sidebar"><i data-lucide="panel-left-close"></i></button></div>
         <nav class="main-nav">
             @foreach([
-                ['dashboard','dashboard','house','Tổng quan'], ['tasks.mine','tasks.mine','square-check-big','Task của tôi'], ['tasks.index','tasks.*','table-2','Tất cả task'],
+                ['dashboard','dashboard','house','Tổng quan'], ['tasks.mine','tasks.mine','square-check-big','Task của tôi'], ['tasks.index','tasks.index','table-2','Tất cả task'],
                 ['projects.index','projects.*','folder','Dự án'], ['calendar','calendar','calendar-days','Lịch'], ['reports','reports','chart-no-axes-column','Báo cáo'],
                 ['members','members','users','Thành viên'], ['labels','labels','tag','Nhãn'], ['settings','settings','settings','Cài đặt'],
             ] as [$route,$match,$icon,$label])

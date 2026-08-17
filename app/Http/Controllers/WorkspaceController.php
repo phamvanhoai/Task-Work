@@ -12,12 +12,15 @@ class WorkspaceController extends Controller
 {
     public function myTasks(Request $request): View
     {
+        $baseQuery = Task::where('assignee_id', $request->user()->id);
+        $statusCounts = (clone $baseQuery)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $overdueCount = (clone $baseQuery)->whereDate('due_date', '<', today())->where('status', '!=', 'done')->count();
         $tasks = Task::with(['project', 'assignee'])->where('assignee_id', $request->user()->id)
             ->when($request->status, fn ($query, $status) => $query->where('status', $status))
             ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END")
             ->orderBy('due_date')->paginate(10);
 
-        return view('tasks.mine', compact('tasks'));
+        return view('tasks.mine', compact('tasks', 'statusCounts', 'overdueCount'));
     }
 
     public function calendar(): View
