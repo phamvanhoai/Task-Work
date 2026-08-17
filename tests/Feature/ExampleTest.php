@@ -20,6 +20,15 @@ class ExampleTest extends TestCase
     public function test_authenticated_user_can_view_dashboard(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->get('/dashboard')->assertOk()->assertSee('Tổng quan công việc');
+        $this->actingAs($user)->get('/dashboard')->assertOk()->assertSee('Chào buổi sáng');
+    }
+
+    public function test_authenticated_user_can_view_workspace_screens(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (['/my-tasks', '/projects', '/tasks', '/calendar', '/reports', '/members', '/labels', '/settings'] as $uri) {
+            $this->actingAs($user)->get($uri)->assertOk();
+        }
     }
 }

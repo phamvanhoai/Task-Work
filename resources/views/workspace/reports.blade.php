@@ -1,0 +1,13 @@
+@extends('layouts.app')
+@section('title','Báo cáo · TaskFlow') @section('heading','Báo cáo') @section('subtitle','Phân tích hiệu suất làm việc của đội ngũ.')
+@section('actions')<button class="btn secondary">↓ Xuất báo cáo</button><button class="btn primary">30 ngày qua⌄</button>@endsection
+@section('content')
+@php
+    $total = $tasks->count();
+    $done = $tasks->where('status', 'done')->count();
+    $rate = $total ? round($done / $total * 100) : 0;
+@endphp
+<section class="stats"><article><span class="stat-icon blue">▤</span><div><small>Tổng công việc</small><strong>{{ $total }}</strong><em>Trong toàn bộ dự án</em></div></article><article><span class="stat-icon green">✓</span><div><small>Đã hoàn thành</small><strong>{{ $done }}</strong><em><b>{{ $rate }}%</b> tỷ lệ hoàn thành</em></div></article><article><span class="stat-icon orange">◷</span><div><small>Đang thực hiện</small><strong>{{ $tasks->where('status','in_progress')->count() }}</strong><em>Đang được xử lý</em></div></article><article><span class="stat-icon violet">◎</span><div><small>Hiệu suất nhóm</small><strong>{{ $rate }}%</strong><em>Trung bình kỳ này</em></div></article></section>
+<div class="report-grid"><section class="panel"><div class="panel-head"><div><h2>Xu hướng hoàn thành</h2><p>Số công việc hoàn thành theo thời gian</p></div></div><div class="line-chart"></div></section><section class="panel"><div class="panel-head"><div><h2>Phân bổ trạng thái</h2><p>Tổng {{ $total }} công việc</p></div></div><div class="donut" data-total="{{ $total }}"></div><div class="chart-legend"><span>● Cần làm</span><span>● Đang làm</span><span>● Hoàn thành</span></div></section></div>
+<div class="report-grid lower"><section class="panel"><div class="panel-head"><h2>Tiến độ theo dự án</h2></div><div class="bar-list">@foreach($projects->take(6) as $project) @php($p=$project->tasks_count?round($project->done_count/$project->tasks_count*100):0)<div class="bar-row"><b>{{ Str::limit($project->name,18) }}</b><span class="bar-track"><i style="width:{{ $p }}%"></i></span><span>{{ $p }}%</span></div>@endforeach</div></section><section class="panel"><div class="panel-head"><h2>Thành viên nổi bật</h2></div>@foreach($members->sortByDesc('done_count')->take(5) as $member)<div class="ranking"><span class="avatar">{{ mb_substr($member->name,0,1) }}</span><div><b>{{ $member->name }}</b><small>{{ $member->done_count }} việc hoàn thành</small></div><strong>{{ $member->tasks_count ? round($member->done_count/$member->tasks_count*100) : 0 }}%</strong></div>@endforeach</section></div>
+@endsection
