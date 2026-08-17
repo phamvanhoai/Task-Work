@@ -11,6 +11,11 @@ for (const [name, path] of Object.entries({ dashboard: '/dashboard', 'task-cua-t
     await page.screenshot({ path: `storage/app/${name}-current.png`, fullPage: false });
 }
 await page.goto('http://127.0.0.1:8000/tasks');
+await page.locator('.action-menu-toggle').first().click();
+await page.locator('.action-menu.open .action-menu-popover').waitFor({ state: 'visible' });
+await page.waitForTimeout(200);
+await page.screenshot({ path: 'storage/app/task-action-menu-current.png', fullPage: false });
+await page.locator('.action-menu-toggle').first().click();
 await page.locator('a[href$="/tasks/create"]').first().click();
 await page.waitForTimeout(250);
 await page.screenshot({ path: 'storage/app/task-modal-current.png', fullPage: false });

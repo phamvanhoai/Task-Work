@@ -135,4 +135,31 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     taskDelete?.addEventListener('click', () => submitDelete(taskDelete, 'Xóa task này? Hành động không thể hoàn tác.'));
     projectDelete?.addEventListener('click', () => submitDelete(projectDelete, 'Xóa dự án và toàn bộ task bên trong? Hành động không thể hoàn tác.'));
+    document.addEventListener('click', (event) => {
+        const toggle = event.target.closest('.action-menu-toggle');
+        const deleteButton = event.target.closest('[data-delete-action]');
+        const openMenus = document.querySelectorAll('.action-menu.open');
+
+        if (toggle) {
+            event.stopPropagation();
+            const menu = toggle.closest('.action-menu');
+            const wasOpen = menu.classList.contains('open');
+            openMenus.forEach((item) => item.classList.remove('open'));
+            if (!wasOpen) {
+                const rect = toggle.getBoundingClientRect();
+                const popover = menu.querySelector('.action-menu-popover');
+                popover.style.top = `${rect.bottom + 6}px`;
+                popover.style.right = `${window.innerWidth - rect.right}px`;
+                menu.classList.add('open');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+            return;
+        }
+
+        openMenus.forEach((item) => {
+            item.classList.remove('open');
+            item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+        });
+        if (deleteButton) submitDelete({ dataset: { action: deleteButton.dataset.deleteAction } }, deleteButton.dataset.deleteMessage);
+    });
 });
