@@ -16,9 +16,15 @@ class TaskController extends Controller
     {
         $tasks = Task::with(['project', 'assignee'])->when($request->search, fn ($q, $v) => $q->where('title', 'like', "%$v%"))
             ->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->project_id, fn ($q, $v) => $q->where('project_id', $v))
-            ->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")->orderBy('due_date')->paginate(20)->withQueryString();
+            ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END")
+            ->orderBy('due_date')->paginate(10)->withQueryString();
 
-        return view('tasks.index', ['tasks' => $tasks, 'projects' => Project::orderBy('name')->get()]);
+        return view('tasks.index', [
+            'tasks' => $tasks,
+            'projects' => Project::orderBy('name')->get(),
+            'statusCounts' => Task::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
+            'overdueCount' => Task::whereDate('due_date', '<', today())->where('status', '!=', 'done')->count(),
+        ]);
     }
 
     public function create(Request $request): View

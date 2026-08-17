@@ -1,11 +1,14 @@
 @extends('layouts.app')
-@section('title','Tất cả công việc · TaskFlow')
-@section('heading','Tất cả công việc')
-@section('subtitle','Quản lý và theo dõi toàn bộ công việc của nhóm.')
-@section('actions')<a class="btn primary" href="{{ route('tasks.create') }}">＋ Thêm công việc</a>@endsection
+@section('title','Tất cả task · TaskFlow')
+@section('heading')Tất cả task　<span class="heading-count">{{ $tasks->total() }}</span>@endsection
+@section('actions')<a class="btn primary" href="{{ route('tasks.create') }}">＋　Tạo task</a>@endsection
 @section('content')
-<div class="view-tabs"><a class="active" href="{{ route('tasks.index') }}">▤ Danh sách</a><a href="{{ route('calendar') }}">▦ Lịch</a></div>
-<form class="filters"><label class="search-field">⌕<input name="search" value="{{ request('search') }}" placeholder="Tìm kiếm công việc..."></label><select name="project_id"><option value="">Tất cả dự án</option>@foreach($projects as $project)<option value="{{ $project->id }}" @selected(request('project_id')==$project->id)>{{ $project->name }}</option>@endforeach</select><select name="status"><option value="">Tất cả trạng thái</option>@foreach(['todo'=>'Cần làm','in_progress'=>'Đang làm','review'=>'Đánh giá','done'=>'Hoàn thành'] as $v=>$l)<option value="{{ $v }}" @selected(request('status')===$v)>{{ $l }}</option>@endforeach</select><button class="btn secondary">Lọc</button></form>
-@include('tasks.partials.table', ['tasks' => $tasks])
-{{ $tasks->links() }}
+<div class="task-toolbar"><div class="view-switch"><a class="active">▤　Danh sách</a><a>▥　Bảng Kanban</a><a href="{{ route('calendar') }}">▣　Lịch</a><a>⌁　Gantt</a></div><form class="task-search"><label>⌕<input name="search" value="{{ request('search') }}" placeholder="Tìm kiếm task..."></label><button class="btn secondary">☷　Bộ lọc</button></form></div>
+<section class="task-data-card"><div class="task-summary">
+    @foreach([['Tất cả',$tasks->total(),'all'],['Việc cần làm',$statusCounts['todo']??0,''],['Đang thực hiện',$statusCounts['in_progress']??0,'blue'],['Đang review',$statusCounts['review']??0,'orange'],['Hoàn thành',$statusCounts['done']??0,'green'],['Quá hạn',$overdueCount,'red']] as [$label,$count,$class])<div class="{{ $class }}"><span>{{ $label }}</span><b>{{ $count }}</b></div>@endforeach
+    <div class="summary-actions"><button>Sắp xếp:　<b>Mới nhất⌄</b></button><button>⇩</button><button>⚙</button></div>
+</div>
+<div class="task-reference-table"><table><thead><tr><th><input type="checkbox"></th><th>Task</th><th>Dự án</th><th>Người phụ trách</th><th>Nhãn</th><th>Ưu tiên</th><th>Hạn chót</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+@forelse($tasks as $task)<tr><td><input type="checkbox"></td><td><a href="{{ route('tasks.edit',$task) }}"><b>{{ $task->title }}</b></a></td><td><span class="project-cell"><i style="background:#{{ substr(md5($task->project->key),0,6) }}"></i>{{ $task->project->name }}</span></td><td><span class="person"><span class="avatar">{{ mb_substr($task->assignee?->name ?? '?',0,1) }}</span>{{ $task->assignee?->name ?? 'Chưa giao' }}</span></td><td><span class="task-label">{{ ['urgent'=>'Quan trọng','high'=>'UI/UX','medium'=>'Research','low'=>'Testing'][$task->priority] }}</span></td><td><span class="priority {{ $task->priority }}">{{ in_array($task->priority,['high','urgent'])?'↑':($task->priority==='low'?'↓':'−') }}　{{ ['urgent'=>'Khẩn cấp','high'=>'Cao','medium'=>'Trung bình','low'=>'Thấp'][$task->priority] }}</span></td><td class="{{ $task->due_date?->isPast()&&$task->status!=='done'?'text-danger':'' }}"><b>{{ $task->due_date?->format('d/m/Y') ?? '—' }}</b></td><td><span class="badge {{ $task->status }}">●　{{ ['todo'=>'Việc cần làm','in_progress'=>'Đang thực hiện','review'=>'Đang review','done'=>'Hoàn thành'][$task->status] }}</span></td><td><a href="{{ route('tasks.edit',$task) }}">⋮</a></td></tr>@empty<tr><td colspan="9" class="empty">Chưa có task. Hãy chạy dữ liệu mẫu để hiển thị đầy đủ.</td></tr>@endforelse
+</tbody></table></div><div class="reference-pager"><span>Hiển thị {{ $tasks->firstItem() ?? 0 }} - {{ $tasks->lastItem() ?? 0 }} của {{ $tasks->total() }} task</span><div>{{ $tasks->links() }}</div><span>10 / trang　⌄</span></div></section>
 @endsection
