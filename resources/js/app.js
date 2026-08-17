@@ -1,6 +1,6 @@
 import './bootstrap';
 import {
-    Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleAlert, CircleCheckBig,
+    Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheckBig,
     ClipboardCheck, Clock3, Columns3, createIcons, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
     ListFilter, Menu, MessageSquare, MoreVertical, PanelLeftClose, Pencil, Play, Plus, Search, Settings, Share2,
     Save, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, Trash2, TriangleAlert, UserPlus, Users, X,
@@ -8,7 +8,7 @@ import {
 
 document.addEventListener('DOMContentLoaded', () => {
     createIcons({ icons: {
-        Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, CircleAlert, CircleCheckBig,
+        Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheckBig,
         ClipboardCheck, Clock3, Columns3, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
         ListFilter, Menu, MessageSquare, MoreVertical, PanelLeftClose, Pencil, Play, Plus, Search, Settings, Share2,
         Save, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, Trash2, TriangleAlert, UserPlus, Users, X,
@@ -124,8 +124,21 @@ document.addEventListener('DOMContentLoaded', () => {
     projectModal?.querySelectorAll('[data-modal-close]').forEach((button) => button.addEventListener('click', () => projectModal.close()));
     projectModal?.addEventListener('click', (event) => { if (event.target === projectModal) projectModal.close(); });
 
-    const submitDelete = (button, message) => {
-        if (!button?.dataset.action || !window.confirm(message)) return;
+    const confirmModal = document.querySelector('#confirm-modal');
+    const showConfirm = (message) => new Promise((resolve) => {
+        if (!confirmModal) return resolve(false);
+        confirmModal.querySelector('#confirm-message').textContent = message;
+        const finish = (accepted) => {
+            confirmModal.close();
+            resolve(accepted);
+        };
+        confirmModal.querySelector('[data-confirm-accept]').onclick = () => finish(true);
+        confirmModal.querySelector('[data-confirm-cancel]').onclick = () => finish(false);
+        confirmModal.oncancel = (event) => { event.preventDefault(); finish(false); };
+        confirmModal.showModal();
+    });
+    const submitDelete = async (button, message) => {
+        if (!button?.dataset.action || !await showConfirm(message)) return;
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = button.dataset.action;
@@ -162,4 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (deleteButton) submitDelete({ dataset: { action: deleteButton.dataset.deleteAction } }, deleteButton.dataset.deleteMessage);
     });
+    document.querySelectorAll('[data-auto-submit]').forEach((select) => select.addEventListener('change', () => select.form.submit()));
+    document.querySelectorAll('[data-filter-toggle]').forEach((button) => button.addEventListener('click', () => {
+        const panel = document.querySelector('.task-filter-form');
+        panel?.classList.toggle('open');
+        button.classList.toggle('active', panel?.classList.contains('open'));
+    }));
 });

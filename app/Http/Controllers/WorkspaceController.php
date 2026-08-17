@@ -12,13 +12,24 @@ class WorkspaceController extends Controller
 {
     public function myTasks(Request $request): View
     {
+        $sort = in_array($request->sort, ['newest', 'oldest', 'due_asc', 'due_desc', 'priority'], true) ? $request->sort : 'newest';
+        $perPage = in_array((int) $request->per_page, [10, 20, 50], true) ? (int) $request->per_page : 10;
         $baseQuery = Task::where('assignee_id', $request->user()->id);
         $statusCounts = (clone $baseQuery)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
         $overdueCount = (clone $baseQuery)->whereDate('due_date', '<', today())->where('status', '!=', 'done')->count();
         $tasks = Task::with(['project', 'assignee'])->where('assignee_id', $request->user()->id)
             ->when($request->status, fn ($query, $status) => $query->where('status', $status))
-            ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END")
-            ->orderBy('due_date')->paginate(10);
+            ->when($request->priority, fn ($query, $priority) => $query->where('priority', $priority))
+            ->when($request->project_id, fn ($query, $projectId) => $query->where('project_id', $projectId))
+            ->when($request->boolean('overdue'), fn ($query) => $query->whereDate('due_date', '<', today())->where('status', '!=', 'done'));
+        match ($sort) {
+            'oldest' => $tasks->oldest(),
+            'due_asc' => $tasks->orderByRaw('due_date IS NULL')->orderBy('due_date'),
+            'due_desc' => $tasks->orderByRaw('due_date IS NULL')->orderByDesc('due_date'),
+            'priority' => $tasks->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END")->latest(),
+            default => $tasks->latest(),
+        };
+        $tasks = $tasks->paginate($perPage)->withQueryString();
 
         return view('tasks.mine', [
             'tasks' => $tasks,
@@ -26,6 +37,8 @@ class WorkspaceController extends Controller
             'overdueCount' => $overdueCount,
             'projects' => Project::orderBy('name')->get(),
             'users' => User::orderBy('name')->get(),
+            'sort' => $sort,
+            'perPage' => $perPage,
         ]);
     }
 

@@ -26,4 +26,5 @@
         </main>
     </section>
 </div>
+<dialog class="confirm-modal" id="confirm-modal"><div class="confirm-card"><span class="confirm-icon"><i data-lucide="triangle-alert"></i></span><div><h2>Xác nhận xóa</h2><p id="confirm-message">Bạn có chắc chắn muốn xóa?</p></div><div class="confirm-actions"><button class="btn secondary" type="button" data-confirm-cancel>Hủy</button><button class="btn danger" type="button" data-confirm-accept><i data-lucide="trash-2"></i>Xóa</button></div></div></dialog>
 </body></html>
