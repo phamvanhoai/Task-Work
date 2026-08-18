@@ -120,5 +120,6 @@ class ExampleTest extends TestCase
         $this->assertSame('Nguyễn Văn A', $user->name);
         $this->assertTrue($user->preferences['show_task_count']);
         $this->assertTrue(Hash::check('NewPassword123!', $user->password));
+        $this->actingAs($user)->get(route('settings'))->assertOk()->assertSee('data-theme="light"', false);
     }
 }

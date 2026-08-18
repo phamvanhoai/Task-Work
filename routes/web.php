@@ -32,5 +32,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/profile', [WorkspaceController::class, 'updateProfile'])->name('settings.profile');
     Route::put('/settings/preferences', [WorkspaceController::class, 'updatePreferences'])->name('settings.preferences');
     Route::put('/settings/password', [WorkspaceController::class, 'updatePassword'])->name('settings.password');
+    Route::delete('/settings/sessions', [WorkspaceController::class, 'destroyOtherSessions'])->name('settings.sessions.destroy');
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 });

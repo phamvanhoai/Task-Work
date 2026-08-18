@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -230,7 +231,15 @@ class WorkspaceController extends Controller
             'timezone' => ['required', Rule::in(['Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'UTC'])],
             'locale' => ['required', Rule::in(['vi', 'en'])],
             'bio' => ['nullable', 'string', 'max:500'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar_path) {
+                Storage::disk('public')->delete($user->avatar_path);
+            }
+            $data['avatar_path'] = $request->file('avatar')->store('avatars', 'public');
+        }
+        unset($data['avatar']);
         $user->update($data);
 
         return back()->with('success', 'Đã lưu thông tin cá nhân.');
@@ -257,5 +266,14 @@ class WorkspaceController extends Controller
         $request->user()->update(['password' => Hash::make($data['password'])]);
 
         return back()->with('success', 'Đã đổi mật khẩu.');
+    }
+
+    public function destroyOtherSessions(Request $request): RedirectResponse
+    {
+        if (config('session.driver') === 'database') {
+            \DB::table('sessions')->where('user_id', $request->user()->id)->where('id', '!=', $request->session()->getId())->delete();
+        }
+
+        return back()->with('success', 'Đã đăng xuất khỏi các thiết bị khác.');
     }
 }

@@ -331,6 +331,45 @@ document.addEventListener('DOMContentLoaded', () => {
         button.innerHTML = `<i data-lucide="${input.type === 'password' ? 'eye-off' : 'eye'}"></i>`;
         createIcons({ icons });
     }));
+    const profilePhotoButton = document.querySelector('.profile-photo .btn');
+    const savedAvatar = document.querySelector('.user-avatar img');
+    const profileAvatar = document.querySelector('.profile-photo .avatar');
+    if (savedAvatar && profileAvatar) profileAvatar.replaceChildren(savedAvatar.cloneNode());
+    profilePhotoButton?.addEventListener('click', () => {
+        const input = Object.assign(document.createElement('input'), { type: 'file', name: 'avatar', accept: 'image/*' });
+        input.hidden = true;
+        input.addEventListener('change', () => {
+            if (!input.files.length) return;
+            const form = profilePhotoButton.closest('form');
+            form.enctype = 'multipart/form-data';
+            form.appendChild(input);
+            form.submit();
+        });
+        document.body.appendChild(input);
+        input.click();
+    });
+    const preferenceForm = document.querySelector('.preference-settings form');
+    preferenceForm?.querySelectorAll('input,select').forEach((control) => control.addEventListener('change', () => preferenceForm.requestSubmit()));
+    document.querySelector('.preference-settings')?.setAttribute('id', 'preferences');
+    document.querySelector('.password-settings')?.setAttribute('id', 'security');
+    const sessionSettings = document.querySelector('.session-settings');
+    sessionSettings?.setAttribute('id', 'sessions');
+    if (sessionSettings && !sessionSettings.querySelector('[data-logout-sessions]')) {
+        const button = Object.assign(document.createElement('button'), { type: 'button', className: 'text-action', textContent: 'Đăng xuất tất cả' });
+        button.dataset.logoutSessions = '';
+        sessionSettings.querySelector('.card-heading')?.appendChild(button);
+        button.addEventListener('click', async () => {
+            if (!await showConfirm('Đăng xuất khỏi tất cả thiết bị khác?')) return;
+            const form = document.createElement('form');
+            form.method = 'POST'; form.action = '/settings/sessions';
+            form.innerHTML = `<input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}"><input type="hidden" name="_method" value="DELETE">`;
+            document.body.appendChild(form); form.submit();
+        });
+    }
+    document.querySelectorAll('[data-settings-link]').forEach((link) => link.addEventListener('click', () => {
+        document.querySelectorAll('[data-settings-link]').forEach((item) => item.classList.remove('active'));
+        link.classList.add('active');
+    }));
     document.querySelector('[data-member-export]')?.addEventListener('click', () => {
         const rows = [...document.querySelectorAll('.member-table-wrap tr')].map((row) => [...row.querySelectorAll('th,td')].map((cell) => `"${cell.innerText.trim().replaceAll('"', '""')}"`).join(','));
         const blob = new Blob([`\uFEFF${rows.join('\n')}`], { type: 'text/csv;charset=utf-8' });
