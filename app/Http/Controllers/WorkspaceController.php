@@ -9,7 +9,9 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class WorkspaceController extends Controller
@@ -207,8 +209,53 @@ class WorkspaceController extends Controller
         ]);
     }
 
-    public function settings(): View
+    public function settings(Request $request): View
     {
-        return view('workspace.settings');
+        $sessions = collect();
+        if (config('session.driver') === 'database') {
+            $sessions = \DB::table('sessions')->where('user_id', $request->user()->id)->orderByDesc('last_activity')->get();
+        }
+
+        return view('workspace.settings', compact('sessions'));
+    }
+
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($user)],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'job_title' => ['nullable', 'string', 'max:100'],
+            'timezone' => ['required', Rule::in(['Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'UTC'])],
+            'locale' => ['required', Rule::in(['vi', 'en'])],
+            'bio' => ['nullable', 'string', 'max:500'],
+        ]);
+        $user->update($data);
+
+        return back()->with('success', 'Đã lưu thông tin cá nhân.');
+    }
+
+    public function updatePreferences(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'theme' => ['required', Rule::in(['light', 'dark', 'system'])],
+            'density' => ['required', Rule::in(['compact', 'standard', 'comfortable'])],
+        ]);
+        $data += ['show_task_count' => $request->boolean('show_task_count'), 'notification_sound' => $request->boolean('notification_sound'), 'auto_save' => $request->boolean('auto_save'), 'fullscreen_task' => $request->boolean('fullscreen_task')];
+        $request->user()->update(['preferences' => $data]);
+
+        return back()->with('success', 'Đã lưu tùy chọn cá nhân.');
+    }
+
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
+        $request->user()->update(['password' => Hash::make($data['password'])]);
+
+        return back()->with('success', 'Đã đổi mật khẩu.');
     }
 }

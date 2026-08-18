@@ -29,5 +29,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/labels/{label}', [WorkspaceController::class, 'updateLabel'])->name('labels.update');
     Route::delete('/labels/{label}', [WorkspaceController::class, 'destroyLabel'])->name('labels.destroy');
     Route::get('/settings', [WorkspaceController::class, 'settings'])->name('settings');
+    Route::put('/settings/profile', [WorkspaceController::class, 'updateProfile'])->name('settings.profile');
+    Route::put('/settings/preferences', [WorkspaceController::class, 'updatePreferences'])->name('settings.preferences');
+    Route::put('/settings/password', [WorkspaceController::class, 'updatePassword'])->name('settings.password');
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 });

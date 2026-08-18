@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -99,5 +100,25 @@ class ExampleTest extends TestCase
         $this->actingAs($user)->delete(route('labels.destroy', $label))->assertRedirect();
 
         $this->assertDatabaseMissing('labels', ['id' => $label->id]);
+    }
+
+    public function test_profile_preferences_and_password_can_be_updated(): void
+    {
+        $user = User::factory()->create(['password' => 'OldPassword123!']);
+        $this->actingAs($user)->put(route('settings.profile'), [
+            'name' => 'Nguyễn Văn A', 'email' => 'nguyenvana@example.com', 'phone' => '0123456789',
+            'job_title' => 'Project Manager', 'timezone' => 'Asia/Ho_Chi_Minh', 'locale' => 'vi', 'bio' => 'Quản lý dự án.',
+        ])->assertRedirect();
+        $this->actingAs($user)->put(route('settings.preferences'), [
+            'theme' => 'light', 'density' => 'standard', 'show_task_count' => '1', 'auto_save' => '1',
+        ])->assertRedirect();
+        $this->actingAs($user)->put(route('settings.password'), [
+            'current_password' => 'OldPassword123!', 'password' => 'NewPassword123!', 'password_confirmation' => 'NewPassword123!',
+        ])->assertRedirect();
+
+        $user->refresh();
+        $this->assertSame('Nguyễn Văn A', $user->name);
+        $this->assertTrue($user->preferences['show_task_count']);
+        $this->assertTrue(Hash::check('NewPassword123!', $user->password));
     }
 }

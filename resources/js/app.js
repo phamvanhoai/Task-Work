@@ -325,6 +325,12 @@ document.addEventListener('DOMContentLoaded', () => {
     labelEditModal?.querySelectorAll('[data-label-edit-close]').forEach((button) => button.addEventListener('click', () => labelEditModal.close()));
     labelEditModal?.addEventListener('click', (event) => { if (event.target === labelEditModal) labelEditModal.close(); });
     document.querySelectorAll('.color-input input[type="color"]').forEach((input) => input.addEventListener('input', () => { input.nextElementSibling.textContent = input.value.toUpperCase(); }));
+    document.querySelectorAll('[data-password-toggle]').forEach((button) => button.addEventListener('click', () => {
+        const input = button.previousElementSibling;
+        input.type = input.type === 'password' ? 'text' : 'password';
+        button.innerHTML = `<i data-lucide="${input.type === 'password' ? 'eye-off' : 'eye'}"></i>`;
+        createIcons({ icons });
+    }));
     document.querySelector('[data-member-export]')?.addEventListener('click', () => {
         const rows = [...document.querySelectorAll('.member-table-wrap tr')].map((row) => [...row.querySelectorAll('th,td')].map((cell) => `"${cell.innerText.trim().replaceAll('"', '""')}"`).join(','));
         const blob = new Blob([`\uFEFF${rows.join('\n')}`], { type: 'text/csv;charset=utf-8' });
