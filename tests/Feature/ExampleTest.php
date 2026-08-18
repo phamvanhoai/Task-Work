@@ -121,5 +121,6 @@ class ExampleTest extends TestCase
         $this->assertTrue($user->preferences['show_task_count']);
         $this->assertTrue(Hash::check('NewPassword123!', $user->password));
         $this->actingAs($user)->get(route('settings'))->assertOk()->assertSee('data-theme="light"', false);
+        $this->actingAs($user)->get(route('settings.export'))->assertOk()->assertHeader('content-type', 'application/json');
     }
 }

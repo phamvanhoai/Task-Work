@@ -351,6 +351,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const preferenceForm = document.querySelector('.preference-settings form');
     preferenceForm?.querySelectorAll('input,select').forEach((control) => control.addEventListener('change', () => preferenceForm.requestSubmit()));
     document.querySelector('.preference-settings')?.setAttribute('id', 'preferences');
+    document.querySelector('.theme-options')?.setAttribute('id', 'appearance');
+    preferenceForm?.elements.namedItem('notification_sound')?.closest('.setting-switch')?.setAttribute('id', 'notifications');
+    document.querySelector('.settings-fields [name="timezone"]')?.closest('label')?.setAttribute('id', 'time-management');
     document.querySelector('.password-settings')?.setAttribute('id', 'security');
     const sessionSettings = document.querySelector('.session-settings');
     sessionSettings?.setAttribute('id', 'sessions');

@@ -276,4 +276,11 @@ class WorkspaceController extends Controller
 
         return back()->with('success', 'Đã đăng xuất khỏi các thiết bị khác.');
     }
+
+    public function exportSettings(Request $request)
+    {
+        $payload = $request->user()->only(['name', 'email', 'phone', 'job_title', 'timezone', 'locale', 'bio', 'preferences', 'created_at']);
+
+        return response()->streamDownload(fn () => print json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 'taskflow-account.json', ['Content-Type' => 'application/json']);
+    }
 }
