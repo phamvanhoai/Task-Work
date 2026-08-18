@@ -47,4 +47,15 @@ class ExampleTest extends TestCase
         $this->assertDatabaseHas('tasks', ['id' => $task->id, 'status' => 'done']);
         $this->assertNotNull($task->fresh()->completed_at);
     }
+
+    public function test_member_can_be_added_from_members_screen(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)->post(route('members.store'), [
+            'name' => 'New Member', 'email' => 'new-member@example.com', 'role' => 'member', 'password' => 'Password123!',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['email' => 'new-member@example.com', 'role' => 'member']);
+    }
 }

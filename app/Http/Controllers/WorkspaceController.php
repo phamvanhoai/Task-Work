@@ -6,7 +6,9 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class WorkspaceController extends Controller
@@ -95,9 +97,27 @@ class WorkspaceController extends Controller
         ]);
     }
 
-    public function members(): View
+    public function members(Request $request): View
     {
-        return view('workspace.members', ['members' => User::withCount(['projects', 'tasks', 'tasks as done_count' => fn ($query) => $query->where('status', 'done')])->paginate(8)]);
+        $baseQuery = User::query()->when($request->search, fn ($query, $search) => $query->where(fn ($query) => $query->where('name', 'like', "%$search%")->orWhere('email', 'like', "%$search%")));
+        $roleCounts = (clone $baseQuery)->selectRaw('role, count(*) as total')->groupBy('role')->pluck('total', 'role');
+        $members = (clone $baseQuery)->withCount(['projects', 'tasks', 'tasks as done_count' => fn ($query) => $query->where('status', 'done')])
+            ->when($request->role, fn ($query, $role) => $query->where('role', $role))->orderBy('name')->paginate(8)->withQueryString();
+
+        return view('workspace.members', ['members' => $members, 'roleCounts' => $roleCounts]);
+    }
+
+    public function inviteMember(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:190', 'unique:users,email'],
+            'role' => ['required', Rule::in(['admin', 'member'])],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+        User::create($data);
+
+        return back()->with('success', 'Đã thêm thành viên mới.');
     }
 
     public function labels(): View
