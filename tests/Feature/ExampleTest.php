@@ -90,4 +90,14 @@ class ExampleTest extends TestCase
         $this->actingAs($user)->delete(route('labels.destroy', $label))->assertRedirect();
         $this->assertDatabaseMissing('labels', ['id' => $label->id]);
     }
+
+    public function test_system_label_can_be_deleted(): void
+    {
+        $user = User::factory()->create();
+        $label = Label::where('is_system', true)->firstOrFail();
+
+        $this->actingAs($user)->delete(route('labels.destroy', $label))->assertRedirect();
+
+        $this->assertDatabaseMissing('labels', ['id' => $label->id]);
+    }
 }

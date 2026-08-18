@@ -192,9 +192,6 @@ class WorkspaceController extends Controller
 
     public function destroyLabel(Label $label): RedirectResponse
     {
-        if ($label->is_system) {
-            return back()->withErrors(['label' => 'Không thể xóa nhãn hệ thống.']);
-        }
         $label->delete();
 
         return back()->with('success', 'Đã xóa nhãn.');
