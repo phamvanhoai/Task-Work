@@ -35,8 +35,9 @@ const filteredTotal = Number(await page.locator('.summary-card.all b').textConte
 if (filteredTotal >= unfilteredTotal) throw new Error('Task summary did not update after filtering');
 await page.screenshot({ path: 'storage/app/task-filtered-current.png', fullPage: false });
 await page.goto('http://127.0.0.1:8000/tasks?due=today');
+const todayLabel = new Intl.DateTimeFormat('en-GB').format(new Date());
 for (const dueDate of await page.locator('.task-reference-table tbody tr td:nth-child(7)').allTextContents()) {
-    if (!dueDate.includes('18/08/2026')) throw new Error(`Today filter returned another date: ${dueDate}`);
+    if (!dueDate.includes(todayLabel)) throw new Error(`Today filter returned another date: ${dueDate}`);
 }
 await page.screenshot({ path: 'storage/app/task-today-current.png', fullPage: false });
 await page.goto('http://127.0.0.1:8000/tasks');
@@ -45,10 +46,10 @@ await page.waitForURL('**/tasks?**overdue=1**');
 await page.screenshot({ path: 'storage/app/task-overdue-current.png', fullPage: false });
 await page.goto('http://127.0.0.1:8000/tasks');
 await page.locator('.action-menu-toggle').first().click();
-await page.locator('.action-menu.open .action-menu-popover').waitFor({ state: 'visible' });
+await page.locator('.action-menu-popover.open').waitFor({ state: 'visible' });
 await page.waitForTimeout(200);
 await page.screenshot({ path: 'storage/app/task-action-menu-current.png', fullPage: false });
-await page.locator('[data-delete-action]').first().click();
+await page.locator('.action-menu-popover.open [data-delete-action]').click();
 await page.locator('#confirm-modal').waitFor({ state: 'visible' });
 await page.screenshot({ path: 'storage/app/task-confirm-current.png', fullPage: false });
 await page.locator('[data-confirm-cancel]').click();
@@ -61,6 +62,11 @@ await page.locator('#task-modal').waitFor({ state: 'visible' });
 await page.waitForTimeout(250);
 await page.screenshot({ path: 'storage/app/task-edit-modal-current.png', fullPage: false });
 await page.goto('http://127.0.0.1:8000/projects');
+await page.locator('.project-card .action-menu-toggle').first().click();
+await page.locator('.action-menu-popover.open').waitFor({ state: 'visible' });
+await page.waitForTimeout(200);
+await page.screenshot({ path: 'storage/app/project-action-menu-current.png', fullPage: false });
+await page.locator('.project-card .action-menu-toggle').first().click();
 await page.locator('a[href$="/projects/create"]').first().click();
 await page.waitForTimeout(250);
 await page.screenshot({ path: 'storage/app/project-modal-current.png', fullPage: false });

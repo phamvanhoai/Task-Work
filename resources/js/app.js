@@ -152,27 +152,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const toggle = event.target.closest('.action-menu-toggle');
         const deleteButton = event.target.closest('[data-delete-action]');
         const openMenus = document.querySelectorAll('.action-menu.open');
+        const closeMenu = (item) => {
+            const popover = item._openPopover;
+            item.classList.remove('open');
+            item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+            if (popover) {
+                popover.classList.remove('open');
+                item.appendChild(popover);
+                item._openPopover = null;
+            }
+        };
 
         if (toggle) {
             event.stopPropagation();
             const menu = toggle.closest('.action-menu');
             const wasOpen = menu.classList.contains('open');
-            openMenus.forEach((item) => item.classList.remove('open'));
+            openMenus.forEach(closeMenu);
             if (!wasOpen) {
                 const rect = toggle.getBoundingClientRect();
                 const popover = menu.querySelector('.action-menu-popover');
                 popover.style.top = `${rect.bottom + 6}px`;
                 popover.style.right = `${window.innerWidth - rect.right}px`;
+                menu._openPopover = popover;
+                document.body.appendChild(popover);
+                popover.classList.add('open');
                 menu.classList.add('open');
                 toggle.setAttribute('aria-expanded', 'true');
             }
             return;
         }
 
-        openMenus.forEach((item) => {
-            item.classList.remove('open');
-            item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
-        });
+        openMenus.forEach(closeMenu);
         if (deleteButton) submitDelete({ dataset: { action: deleteButton.dataset.deleteAction } }, deleteButton.dataset.deleteMessage);
     });
     document.querySelectorAll('[data-auto-submit]').forEach((select) => select.addEventListener('change', () => select.form.submit()));
