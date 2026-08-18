@@ -120,6 +120,38 @@ class WorkspaceController extends Controller
         return back()->with('success', 'Đã thêm thành viên mới.');
     }
 
+    public function updateMember(Request $request, User $member): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($member)],
+            'role' => ['required', Rule::in(['admin', 'member'])],
+            'password' => ['nullable', 'string', 'min:8'],
+        ]);
+        if ($member->is($request->user())) {
+            $data['role'] = $member->role;
+        }
+        if (blank($data['password'] ?? null)) {
+            unset($data['password']);
+        }
+        $member->update($data);
+
+        return back()->with('success', 'Đã cập nhật thành viên.');
+    }
+
+    public function destroyMember(Request $request, User $member): RedirectResponse
+    {
+        if ($member->is($request->user())) {
+            return back()->withErrors(['member' => 'Không thể xóa tài khoản đang đăng nhập.']);
+        }
+        if ($member->ownedProjects()->exists()) {
+            return back()->withErrors(['member' => 'Hãy chuyển quyền sở hữu dự án trước khi xóa thành viên.']);
+        }
+        $member->delete();
+
+        return back()->with('success', 'Đã xóa thành viên.');
+    }
+
     public function labels(): View
     {
         $labels = [

@@ -22,6 +22,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [WorkspaceController::class, 'reports'])->name('reports');
     Route::get('/members', [WorkspaceController::class, 'members'])->name('members');
     Route::post('/members', [WorkspaceController::class, 'inviteMember'])->name('members.store');
+    Route::put('/members/{member}', [WorkspaceController::class, 'updateMember'])->name('members.update');
+    Route::delete('/members/{member}', [WorkspaceController::class, 'destroyMember'])->name('members.destroy');
     Route::get('/labels', [WorkspaceController::class, 'labels'])->name('labels');
     Route::get('/settings', [WorkspaceController::class, 'settings'])->name('settings');
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');

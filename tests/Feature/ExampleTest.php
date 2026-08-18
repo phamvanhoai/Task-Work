@@ -58,4 +58,18 @@ class ExampleTest extends TestCase
 
         $this->assertDatabaseHas('users', ['email' => 'new-member@example.com', 'role' => 'member']);
     }
+
+    public function test_member_can_be_updated_and_deleted(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $member = User::factory()->create(['role' => 'member']);
+
+        $this->actingAs($admin)->put(route('members.update', $member), [
+            'name' => 'Updated Member', 'email' => $member->email, 'role' => 'admin', 'password' => '',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('users', ['id' => $member->id, 'name' => 'Updated Member', 'role' => 'admin']);
+
+        $this->actingAs($admin)->delete(route('members.destroy', $member))->assertRedirect();
+        $this->assertDatabaseMissing('users', ['id' => $member->id]);
+    }
 }

@@ -288,9 +288,23 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click(); URL.revokeObjectURL(link.href);
     });
     const memberModal = document.querySelector('#member-modal');
+    const memberEditModal = document.querySelector('#member-edit-modal');
     document.querySelector('[data-member-invite]')?.addEventListener('click', () => memberModal?.showModal());
     memberModal?.querySelectorAll('[data-member-close]').forEach((button) => button.addEventListener('click', () => memberModal.close()));
     memberModal?.addEventListener('click', (event) => { if (event.target === memberModal) memberModal.close(); });
+    document.addEventListener('click', (event) => {
+        const editButton = event.target.closest('[data-member-edit]');
+        if (!editButton || !memberEditModal) return;
+        const form = memberEditModal.querySelector('form');
+        form.action = editButton.dataset.action;
+        form.elements.namedItem('name').value = editButton.dataset.name;
+        form.elements.namedItem('email').value = editButton.dataset.email;
+        form.elements.namedItem('role').value = editButton.dataset.role;
+        form.elements.namedItem('password').value = '';
+        memberEditModal.showModal();
+    });
+    memberEditModal?.querySelectorAll('[data-member-edit-close]').forEach((button) => button.addEventListener('click', () => memberEditModal.close()));
+    memberEditModal?.addEventListener('click', (event) => { if (event.target === memberEditModal) memberEditModal.close(); });
     document.querySelector('[data-member-export]')?.addEventListener('click', () => {
         const rows = [...document.querySelectorAll('.member-table-wrap tr')].map((row) => [...row.querySelectorAll('th,td')].map((cell) => `"${cell.innerText.trim().replaceAll('"', '""')}"`).join(','));
         const blob = new Blob([`\uFEFF${rows.join('\n')}`], { type: 'text/csv;charset=utf-8' });
