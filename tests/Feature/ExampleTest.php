@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Label;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -71,5 +72,22 @@ class ExampleTest extends TestCase
 
         $this->actingAs($admin)->delete(route('members.destroy', $member))->assertRedirect();
         $this->assertDatabaseMissing('users', ['id' => $member->id]);
+    }
+
+    public function test_label_can_be_created_updated_and_deleted(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('labels.store'), [
+            'name' => 'Khách hàng', 'color' => '#06b6d4', 'description' => 'Theo dõi yêu cầu khách hàng',
+        ])->assertRedirect();
+        $label = Label::where('name', 'Khách hàng')->firstOrFail();
+
+        $this->actingAs($user)->put(route('labels.update', $label), [
+            'name' => 'Khách hàng VIP', 'color' => '#2563eb', 'description' => 'Ưu tiên', 'is_archived' => '1',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('labels', ['id' => $label->id, 'name' => 'Khách hàng VIP', 'is_archived' => true]);
+
+        $this->actingAs($user)->delete(route('labels.destroy', $label))->assertRedirect();
+        $this->assertDatabaseMissing('labels', ['id' => $label->id]);
     }
 }

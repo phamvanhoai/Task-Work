@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Label;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -152,21 +153,61 @@ class WorkspaceController extends Controller
         return back()->with('success', 'Đã xóa thành viên.');
     }
 
-    public function labels(): View
+    public function labels(Request $request): View
     {
-        $labels = [
-            ['name' => 'Quan trọng', 'color' => '#ef4444', 'description' => 'Các task quan trọng cần ưu tiên', 'count' => 24],
-            ['name' => 'Cao', 'color' => '#f97316', 'description' => 'Ưu tiên cao', 'count' => 18],
-            ['name' => 'Trung bình', 'color' => '#fbbf24', 'description' => 'Ưu tiên trung bình', 'count' => 36],
-            ['name' => 'Thấp', 'color' => '#22c55e', 'description' => 'Ưu tiên thấp', 'count' => 22],
-            ['name' => 'Đang làm', 'color' => '#3b82f6', 'description' => 'Task đang được thực hiện', 'count' => 42],
-            ['name' => 'Review', 'color' => '#8b5cf6', 'description' => 'Task cần review, kiểm tra', 'count' => 17],
-            ['name' => 'Hoàn thành', 'color' => '#ec4899', 'description' => 'Task đã hoàn thành', 'count' => 53],
-            ['name' => 'Khách hàng', 'color' => '#06b6d4', 'description' => 'Liên quan đến khách hàng', 'count' => 25],
-            ['name' => 'Bug', 'color' => '#2563eb', 'description' => 'Các lỗi, sự cố cần xử lý', 'count' => 13],
+        $searchQuery = Label::query()->when($request->search, fn ($query, $search) => $query->where(fn ($query) => $query->where('name', 'like', "%$search%")->orWhere('description', 'like', "%$search%")));
+        $tabCounts = [
+            'all' => (clone $searchQuery)->where('is_archived', false)->count(),
+            'system' => (clone $searchQuery)->where('is_system', true)->where('is_archived', false)->count(),
+            'mine' => (clone $searchQuery)->where('created_by', $request->user()->id)->where('is_archived', false)->count(),
+            'archived' => (clone $searchQuery)->where('is_archived', true)->count(),
         ];
+        $type = in_array($request->type, ['all', 'system', 'mine', 'archived'], true) ? $request->type : 'all';
+        $labels = (clone $searchQuery)->with('creator')->withCount('tasks')
+            ->when($type === 'system', fn ($query) => $query->where('is_system', true)->where('is_archived', false))
+            ->when($type === 'mine', fn ($query) => $query->where('created_by', $request->user()->id)->where('is_archived', false))
+            ->when($type === 'archived', fn ($query) => $query->where('is_archived', true))
+            ->when($type === 'all', fn ($query) => $query->where('is_archived', false))
+            ->orderByDesc('tasks_count')->orderBy('name')->paginate(8)->withQueryString();
+        $popularLabels = Label::withCount('tasks')->where('is_archived', false)->orderByDesc('tasks_count')->limit(5)->get();
 
-        return view('workspace.labels', compact('labels'));
+        return view('workspace.labels', compact('labels', 'popularLabels', 'tabCounts', 'type'));
+    }
+
+    public function storeLabel(Request $request): RedirectResponse
+    {
+        $data = $this->validateLabel($request);
+        $data['created_by'] = $request->user()->id;
+        Label::create($data);
+
+        return back()->with('success', 'Đã tạo nhãn mới.');
+    }
+
+    public function updateLabel(Request $request, Label $label): RedirectResponse
+    {
+        $label->update($this->validateLabel($request));
+
+        return back()->with('success', 'Đã cập nhật nhãn.');
+    }
+
+    public function destroyLabel(Label $label): RedirectResponse
+    {
+        if ($label->is_system) {
+            return back()->withErrors(['label' => 'Không thể xóa nhãn hệ thống.']);
+        }
+        $label->delete();
+
+        return back()->with('success', 'Đã xóa nhãn.');
+    }
+
+    private function validateLabel(Request $request): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:80'],
+            'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'is_archived' => ['sometimes', 'boolean'],
+        ]);
     }
 
     public function settings(): View

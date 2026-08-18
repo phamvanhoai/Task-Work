@@ -305,6 +305,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     memberEditModal?.querySelectorAll('[data-member-edit-close]').forEach((button) => button.addEventListener('click', () => memberEditModal.close()));
     memberEditModal?.addEventListener('click', (event) => { if (event.target === memberEditModal) memberEditModal.close(); });
+    const labelModal = document.querySelector('#label-modal');
+    const labelEditModal = document.querySelector('#label-edit-modal');
+    document.querySelectorAll('[data-label-create]').forEach((button) => button.addEventListener('click', () => labelModal?.showModal()));
+    labelModal?.querySelectorAll('[data-label-close]').forEach((button) => button.addEventListener('click', () => labelModal.close()));
+    labelModal?.addEventListener('click', (event) => { if (event.target === labelModal) labelModal.close(); });
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-label-edit]');
+        if (!button || !labelEditModal) return;
+        const form = labelEditModal.querySelector('form');
+        form.action = button.dataset.action;
+        form.elements.namedItem('name').value = button.dataset.name;
+        form.elements.namedItem('color').value = button.dataset.color;
+        form.elements.namedItem('description').value = button.dataset.description;
+        form.elements.namedItem('is_archived')[1].checked = button.dataset.archived === '1';
+        labelEditModal.querySelector('.color-input span').textContent = button.dataset.color.toUpperCase();
+        labelEditModal.showModal();
+    });
+    labelEditModal?.querySelectorAll('[data-label-edit-close]').forEach((button) => button.addEventListener('click', () => labelEditModal.close()));
+    labelEditModal?.addEventListener('click', (event) => { if (event.target === labelEditModal) labelEditModal.close(); });
+    document.querySelectorAll('.color-input input[type="color"]').forEach((input) => input.addEventListener('input', () => { input.nextElementSibling.textContent = input.value.toUpperCase(); }));
     document.querySelector('[data-member-export]')?.addEventListener('click', () => {
         const rows = [...document.querySelectorAll('.member-table-wrap tr')].map((row) => [...row.querySelectorAll('th,td')].map((cell) => `"${cell.innerText.trim().replaceAll('"', '""')}"`).join(','));
         const blob = new Blob([`\uFEFF${rows.join('\n')}`], { type: 'text/csv;charset=utf-8' });
