@@ -75,12 +75,23 @@ class WorkspaceController extends Controller
 
     public function reports(): View
     {
-        $tasks = Task::all();
+        $days = in_array((int) request('days'), [7, 30, 90], true) ? (int) request('days') : 30;
+        $periodStart = today()->subDays($days - 1);
+        $tasks = Task::whereDate('created_at', '>=', $periodStart)->get();
+        $previousTasks = Task::whereBetween('created_at', [$periodStart->copy()->subDays($days), $periodStart->copy()->subSecond()])->get();
+        $trend = collect(range(6, 0))->map(function ($offset) use ($tasks) {
+            $date = today()->subDays($offset);
+
+            return ['date' => $date->format('d/m'), 'total' => $tasks->where('created_at', '<=', $date->copy()->endOfDay())->count(), 'done' => $tasks->where('completed_at', '<=', $date->copy()->endOfDay())->count()];
+        })->push(['date' => today()->format('d/m'), 'total' => $tasks->count(), 'done' => $tasks->where('status', 'done')->count()]);
 
         return view('workspace.reports', [
             'tasks' => $tasks,
             'projects' => Project::withCount(['tasks', 'tasks as done_count' => fn ($query) => $query->where('status', 'done')])->get(),
             'members' => User::withCount(['tasks', 'tasks as done_count' => fn ($query) => $query->where('status', 'done')])->get(),
+            'previousTasks' => $previousTasks,
+            'trend' => $trend,
+            'days' => $days,
         ]);
     }
 

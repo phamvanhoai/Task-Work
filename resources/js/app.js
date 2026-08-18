@@ -279,4 +279,12 @@ document.addEventListener('DOMContentLoaded', () => {
         panel?.classList.toggle('open');
         event.currentTarget.classList.toggle('active', panel?.classList.contains('open'));
     });
+    document.querySelector('[data-report-export]')?.addEventListener('click', () => {
+        const rows = [['Chỉ số', 'Giá trị']];
+        document.querySelectorAll('.report-metrics article').forEach((card) => rows.push([card.querySelector('small').textContent, card.querySelector('strong').textContent]));
+        const csv = rows.map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n');
+        const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+        const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'bao-cao-taskflow.csv' });
+        link.click(); URL.revokeObjectURL(link.href);
+    });
 });
