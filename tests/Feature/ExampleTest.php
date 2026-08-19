@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\ZaloChat;
 use App\Notifications\WorkspaceNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -254,5 +255,21 @@ class ExampleTest extends TestCase
 
         Http::assertSentCount(1);
         Http::assertSent(fn ($request) => $request['chat_id'] === 'group-chat' && str_contains($request['text'], 'Task chung'));
+    }
+
+    public function test_upcoming_unassigned_deadline_is_broadcast_once_to_the_zalo_group(): void
+    {
+        config(['services.zalo_bot.token' => 'test-token']);
+        Http::fake(['*' => Http::response(['ok' => true, 'result' => ['message_id' => '1']])]);
+        $owner = User::factory()->create();
+        $project = Project::create(['name' => 'Deadline', 'key' => 'DDL', 'owner_id' => $owner->id]);
+        Task::create(['project_id' => $project->id, 'title' => 'Sắp hết hạn', 'status' => 'todo', 'priority' => 'high', 'reporter_id' => $owner->id, 'due_date' => today()->addDay()]);
+        ZaloChat::create(['chat_id' => 'deadline-group', 'chat_type' => 'GROUP', 'is_group_target' => true]);
+
+        Artisan::call('notifications:due-tasks');
+        Artisan::call('notifications:due-tasks');
+
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => $request['chat_id'] === 'deadline-group' && str_contains($request['text'], 'ngày mai'));
     }
 }
