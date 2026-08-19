@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\WorkspaceNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -76,16 +77,24 @@ class ExampleTest extends TestCase
         $this->assertSame([$moving->id, $existing->id], Task::where('status', 'review')->orderBy('sort_order')->pluck('id')->all());
     }
 
-    public function test_tasks_can_be_exported_as_the_weekly_excel_template(): void
+    public function test_tasks_can_be_exported_as_the_project_tracking_excel_template(): void
     {
         $user = User::factory()->create();
         $project = Project::create(['name' => 'Weekly Export', 'key' => 'WEX', 'owner_id' => $user->id]);
         Task::create(['project_id' => $project->id, 'title' => 'Exported task', 'status' => 'in_progress', 'priority' => 'high', 'reporter_id' => $user->id, 'assignee_id' => $user->id, 'due_date' => today()->addDays(2)]);
 
-        $response = $this->actingAs($user)->get(route('tasks.export.weekly', ['project_id' => $project->id]));
+        $response = $this->actingAs($user)->get(route('tasks.export.project-tracking', ['project_id' => $project->id]));
 
         $response->assertOk()->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        $this->assertStringStartsWith('PK', $response->streamedContent());
+        $content = $response->streamedContent();
+        $this->assertStringStartsWith('PK', $content);
+        $path = tempnam(sys_get_temp_dir(), 'project-tracking-');
+        file_put_contents($path, $content);
+        $spreadsheet = IOFactory::load($path);
+        unlink($path);
+
+        $this->assertSame(['WBS', 'Issues', 'Defects', 'Q&A'], $spreadsheet->getSheetNames());
+        $this->assertSame('Exported task', $spreadsheet->getSheetByName('WBS')->getCell('C8')->getValue());
     }
 
     public function test_member_can_be_added_from_members_screen(): void

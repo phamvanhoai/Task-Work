@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectTrackingExportController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -16,7 +17,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/my-tasks', [WorkspaceController::class, 'myTasks'])->name('tasks.mine');
-    Route::get('/tasks/export/weekly', [TaskController::class, 'exportWeekly'])->name('tasks.export.weekly');
+    Route::get('/tasks/export/project-tracking', ProjectTrackingExportController::class)->name('tasks.export.project-tracking');
     Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.status');
     Route::resource('projects', ProjectController::class);
     Route::resource('tasks', TaskController::class)->except('show');
