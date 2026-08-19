@@ -207,8 +207,8 @@ body .notification-menu { z-index:90; }
     .task-data-card.dense .task-reference-table td { @apply h-[54px]; }
     .search-reset { @apply grid size-7 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700; }
     .search-reset svg { @apply size-3.5; }
-    .task-kanban { @apply grid grid-cols-4 items-start gap-4; }
-    .kanban-column { @apply min-w-0 rounded-xl bg-slate-50 p-3; }
+    .task-kanban { @apply grid grid-cols-4 items-stretch gap-4; }
+    .kanban-column { @apply flex min-w-0 flex-col rounded-xl bg-slate-50 p-3; }
     .kanban-column>header { @apply mb-3 flex h-9 items-center gap-2 px-1 text-slate-700; }.kanban-column>header h2 { @apply text-sm font-semibold; }.kanban-column>header b { @apply ml-auto grid size-6 place-items-center rounded-full bg-white text-xs shadow-sm; }
     .kanban-column.blue>header { @apply text-blue-600; }.kanban-column.orange>header { @apply text-orange-600; }.kanban-column.green>header { @apply text-emerald-600; }
     .kanban-list { @apply grid gap-3; }.kanban-task { @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md; }.kanban-task-top { @apply flex items-center justify-between; }.kanban-task h3 { @apply mt-3 text-sm font-semibold leading-5; }.kanban-task p { @apply mt-2 min-h-10 text-xs leading-5 text-slate-500; }.kanban-project { @apply mt-3 flex items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-600; }.kanban-project i { @apply size-2 rounded-full; }.kanban-task footer { @apply mt-3 flex items-center justify-between text-xs; }.kanban-task footer time { @apply flex items-center gap-1.5 text-slate-500; }.kanban-task footer time svg { @apply size-3.5; }.kanban-empty { @apply rounded-lg border border-dashed border-slate-300 py-10 text-center text-xs text-slate-400; }
@@ -306,6 +306,6 @@ body.page-tasks-mine .top-search { visibility:visible; }
 body:not(.page-dashboard) .page-content { margin-top:0;padding-top:22px; }
 body:not(.page-dashboard) .page-heading { position:relative;z-index:auto;height:auto;min-height:58px;margin-bottom:10px; }
 body:not(.page-dashboard) .heading-actions { position:static;align-self:flex-start; }
-.task-kanban .kanban-list { min-height:128px;align-content:start;border-radius:8px;transition:background-color .15s ease; }
+.task-kanban .kanban-list { min-height:128px;flex:1;align-content:start;border-radius:8px;transition:background-color .15s ease; }
 .dashboard-progress-summary { display:grid;place-items:center;gap:7px;padding:28px 20px; }.dashboard-progress-summary strong { font-size:28px;color:#334155; }.dashboard-progress-summary span { font-size:10px;color:#94a3b8; }.dashboard-progress-summary>i { display:block;width:80%;height:8px;overflow:hidden;border-radius:999px;background:#e2e8f0; }.dashboard-progress-summary>i>b { display:block;height:100%;border-radius:inherit;background:#4f66f6; }.distribution p { display:flex;align-items:center;gap:7px; }.distribution p>i { width:8px;height:8px;flex:0 0 8px;border-radius:50%; }
 @media(max-width:800px){html,body { max-width:100%;overflow-x:hidden; }.top-search { display:none!important; }.notification-menu { position:fixed!important;top:60px!important;right:8px!important;left:8px!important;width:auto!important; }.project-detail-stats { grid-template-columns:1fr 1fr; }}
