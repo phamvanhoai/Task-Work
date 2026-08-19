@@ -7,14 +7,28 @@ use App\Models\ZaloChat;
 use App\Services\ZaloBotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ZaloBotWebhookController extends Controller
 {
     public function __invoke(Request $request, ZaloBotService $bot): JsonResponse
     {
-        $message = $request->input('result.message', []);
+        $payload = $request->all();
+        if ($payload === []) {
+            $payload = json_decode($request->getContent(), true) ?: [];
+        }
+        $result = data_get($payload, 'result', []);
+        if (is_string($result)) {
+            $result = json_decode($result, true) ?: [];
+        }
+        $message = data_get($result, 'message')
+            ?? data_get($payload, 'message')
+            ?? data_get($payload, 'data.message')
+            ?? [];
         $chatId = (string) data_get($message, 'chat.id', '');
         if ($chatId === '') {
+            Log::notice('Unrecognized Zalo webhook payload', ['payload' => $payload]);
+
             return response()->json(['message' => 'Webhook ready']);
         }
 
