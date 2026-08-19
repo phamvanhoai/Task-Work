@@ -62,6 +62,15 @@ class ExampleTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'new-member@example.com', 'role' => 'member']);
     }
 
+    public function test_regular_member_cannot_manage_other_members(): void
+    {
+        $member = User::factory()->create(['role' => 'member']);
+        $target = User::factory()->create(['role' => 'member']);
+
+        $this->actingAs($member)->delete(route('members.destroy', $target))->assertForbidden();
+        $this->assertDatabaseHas('users', ['id' => $target->id]);
+    }
+
     public function test_member_can_be_updated_and_deleted(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

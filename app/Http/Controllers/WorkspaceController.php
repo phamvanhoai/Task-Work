@@ -113,6 +113,7 @@ class WorkspaceController extends Controller
 
     public function inviteMember(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->role === 'admin', 403);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
@@ -126,6 +127,7 @@ class WorkspaceController extends Controller
 
     public function updateMember(Request $request, User $member): RedirectResponse
     {
+        abort_unless($request->user()->role === 'admin', 403);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($member)],
@@ -145,6 +147,7 @@ class WorkspaceController extends Controller
 
     public function destroyMember(Request $request, User $member): RedirectResponse
     {
+        abort_unless($request->user()->role === 'admin', 403);
         if ($member->is($request->user())) {
             return back()->withErrors(['member' => 'Không thể xóa tài khoản đang đăng nhập.']);
         }
