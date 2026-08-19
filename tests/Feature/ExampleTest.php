@@ -6,6 +6,7 @@ use App\Models\Label;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\WorkspaceNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -122,5 +123,33 @@ class ExampleTest extends TestCase
         $this->assertTrue(Hash::check('NewPassword123!', $user->password));
         $this->actingAs($user)->get(route('settings'))->assertOk()->assertSee('data-theme="light"', false);
         $this->actingAs($user)->get(route('settings.export'))->assertOk()->assertHeader('content-type', 'application/json');
+    }
+
+    public function test_task_assignment_creates_and_manages_notification(): void
+    {
+        $reporter = User::factory()->create();
+        $assignee = User::factory()->create();
+        $project = Project::create(['name' => 'Notify', 'key' => 'NTF', 'owner_id' => $reporter->id]);
+
+        $this->actingAs($reporter)->post(route('tasks.store'), [
+            'project_id' => $project->id, 'title' => 'Notification task', 'status' => 'todo', 'priority' => 'high', 'assignee_id' => $assignee->id,
+        ])->assertRedirect();
+        $notification = $assignee->notifications()->firstOrFail();
+        $this->assertSame('Bạn được giao một task mới', $notification->data['title']);
+
+        $this->actingAs($assignee)->get(route('notifications.index'))->assertOk()->assertSee('Notification task');
+        $this->actingAs($assignee)->get(route('notifications.show', $notification))->assertRedirect();
+        $this->assertNotNull($notification->fresh()->read_at);
+        $this->actingAs($assignee)->delete(route('notifications.destroy', $notification))->assertRedirect();
+        $this->assertDatabaseMissing('notifications', ['id' => $notification->id]);
+    }
+
+    public function test_user_cannot_access_another_users_notification(): void
+    {
+        $owner = User::factory()->create();
+        $stranger = User::factory()->create();
+        $owner->notify(new WorkspaceNotification('Private', 'Only owner', route('dashboard')));
+
+        $this->actingAs($stranger)->get(route('notifications.show', $owner->notifications()->first()))->assertForbidden();
     }
 }

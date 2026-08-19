@@ -281,6 +281,9 @@ class WorkspaceController extends Controller
     {
         $payload = $request->user()->only(['name', 'email', 'phone', 'job_title', 'timezone', 'locale', 'bio', 'preferences', 'created_at']);
 
-        return response()->streamDownload(fn () => print json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 'taskflow-account.json', ['Content-Type' => 'application/json']);
+        return response(json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 200, [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => 'attachment; filename="taskflow-account.json"',
+        ]);
     }
 }

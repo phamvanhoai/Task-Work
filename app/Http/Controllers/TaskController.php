@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\WorkspaceNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -68,6 +69,9 @@ class TaskController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $task = Task::create($this->validated($request) + ['reporter_id' => auth()->id()]);
+        if ($task->assignee && $task->assignee_id !== auth()->id()) {
+            $task->assignee->notify(new WorkspaceNotification('Bạn được giao một task mới', $task->title, route('tasks.index', ['search' => $task->title]), 'clipboard-check', 'blue'));
+        }
 
         return redirect()->route('tasks.index')->with('success', 'Đã tạo công việc.');
     }
@@ -83,20 +87,25 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task): RedirectResponse
     {
+        $previousAssignee = $task->assignee_id;
+        $previousStatus = $task->status;
         $data = $this->validated($request);
         $data['completed_at'] = $data['status'] === 'done' ? ($task->completed_at ?? now()) : null;
         $task->update($data);
+        $this->sendTaskNotification($task, $previousAssignee, $previousStatus);
 
         return redirect()->route('tasks.index')->with('success', 'Đã cập nhật công việc.');
     }
 
     public function updateStatus(Request $request, Task $task): JsonResponse
     {
+        $previousStatus = $task->status;
         $data = $request->validate(['status' => ['required', Rule::in(['todo', 'in_progress', 'review', 'done'])]]);
         $task->update([
             'status' => $data['status'],
             'completed_at' => $data['status'] === 'done' ? ($task->completed_at ?? now()) : null,
         ]);
+        $this->sendTaskNotification($task, $task->assignee_id, $previousStatus);
 
         return response()->json(['message' => 'Đã cập nhật trạng thái.', 'status' => $task->status]);
     }
@@ -113,5 +122,16 @@ class TaskController extends Controller
         return $request->validate(['project_id' => ['required', 'exists:projects,id'], 'title' => ['required', 'string', 'max:200'], 'description' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['todo', 'in_progress', 'review', 'done'])], 'priority' => ['required', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'assignee_id' => ['nullable', 'exists:users,id'], 'due_date' => ['nullable', 'date']]);
+    }
+
+    private function sendTaskNotification(Task $task, ?int $previousAssignee, string $previousStatus): void
+    {
+        $task->loadMissing('assignee');
+        if ($task->assignee_id && $task->assignee_id !== $previousAssignee && $task->assignee_id !== auth()->id()) {
+            $task->assignee->notify(new WorkspaceNotification('Bạn được giao một task', $task->title, route('tasks.index', ['search' => $task->title]), 'user-check', 'violet'));
+        } elseif ($task->assignee && $task->status !== $previousStatus && $task->assignee_id !== auth()->id()) {
+            $statuses = ['todo' => 'Cần làm', 'in_progress' => 'Đang thực hiện', 'review' => 'Đang review', 'done' => 'Hoàn thành'];
+            $task->assignee->notify(new WorkspaceNotification('Trạng thái task đã thay đổi', $task->title.' → '.($statuses[$task->status] ?? $task->status), route('tasks.index', ['search' => $task->title]), 'refresh-cw', $task->status === 'done' ? 'green' : 'orange'));
+        }
     }
 }

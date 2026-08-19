@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\WorkspaceController;
@@ -34,5 +35,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/password', [WorkspaceController::class, 'updatePassword'])->name('settings.password');
     Route::delete('/settings/sessions', [WorkspaceController::class, 'destroyOtherSessions'])->name('settings.sessions.destroy');
     Route::get('/settings/export', [WorkspaceController::class, 'exportSettings'])->name('settings.export');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::patch('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 });

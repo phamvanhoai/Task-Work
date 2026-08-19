@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Notifications\WorkspaceNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -51,6 +53,8 @@ class ProjectController extends Controller
         $data['key'] = strtoupper($data['key']);
         $project = Project::create($data);
         $project->members()->sync($request->input('members', []));
+        $recipients = User::whereIn('id', $request->input('members', []))->where('id', '!=', auth()->id())->get();
+        Notification::send($recipients, new WorkspaceNotification('Bạn được thêm vào dự án', $project->name, route('projects.show', $project), 'folder-plus', 'violet'));
 
         return redirect()->route('projects.show', $project)->with('success', 'Đã tạo project.');
     }
@@ -75,10 +79,13 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project): RedirectResponse
     {
+        $existingMemberIds = $project->members()->pluck('users.id');
         $data = $this->validated($request, $project);
         $data['key'] = strtoupper($data['key']);
         $project->update($data);
         $project->members()->sync($request->input('members', []));
+        $newMemberIds = collect($request->input('members', []))->diff($existingMemberIds)->reject(fn ($id) => (int) $id === auth()->id());
+        Notification::send(User::whereIn('id', $newMemberIds)->get(), new WorkspaceNotification('Bạn được thêm vào dự án', $project->name, route('projects.show', $project), 'folder-plus', 'violet'));
 
         return redirect()->route('projects.show', $project)->with('success', 'Đã cập nhật project.');
     }

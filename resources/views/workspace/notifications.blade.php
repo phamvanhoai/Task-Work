@@ -1,0 +1,9 @@
+@extends('layouts.app')
+@section('title','Thông báo · TaskFlow') @section('heading','Thông báo') @section('subtitle','Theo dõi mọi cập nhật liên quan đến công việc và dự án của bạn.')
+@section('actions')
+@if(auth()->user()->unreadNotifications()->exists())<form method="POST" action="{{ route('notifications.read-all') }}">@csrf @method('PATCH')<button class="btn secondary"><i data-lucide="check-check"></i>Đánh dấu tất cả đã đọc</button></form>@endif
+@endsection
+@section('content')
+<nav class="notification-tabs"><a class="{{ request('filter')!=='unread'?'active':'' }}" href="{{ route('notifications.index') }}">Tất cả <span>{{ auth()->user()->notifications()->count() }}</span></a><a class="{{ request('filter')==='unread'?'active':'' }}" href="{{ route('notifications.index',['filter'=>'unread']) }}">Chưa đọc <span>{{ auth()->user()->unreadNotifications()->count() }}</span></a></nav>
+<section class="panel notification-page-list">@forelse($notifications as $notification)<article class="notification-page-item {{ $notification->read_at?'':'unread' }}"><a href="{{ route('notifications.show',$notification) }}"><span class="notification-icon {{ $notification->data['color']??'blue' }}"><i data-lucide="{{ $notification->data['icon']??'bell' }}"></i></span><span><b>{{ $notification->data['title']??'Thông báo' }}</b><p>{{ $notification->data['message']??'' }}</p><time>{{ $notification->created_at->diffForHumans() }}</time></span></a><button type="button" data-delete-action="{{ route('notifications.destroy',$notification) }}" data-delete-message="Xóa thông báo này?"><i data-lucide="trash-2"></i></button></article>@empty<div class="notification-page-empty"><i data-lucide="bell-off"></i><h2>Chưa có thông báo</h2><p>Các cập nhật mới sẽ xuất hiện tại đây.</p></div>@endforelse<div class="notification-pagination">{{ $notifications->links() }}</div></section>
+@endsection
