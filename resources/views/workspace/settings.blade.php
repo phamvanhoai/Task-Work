@@ -21,6 +21,16 @@
     <div><h4>Nhóm Zalo chung</h4>@if(auth()->user()->role==='admin')<p>Mời Bot vào nhóm và nhắc @Bot một lần để nhóm xuất hiện tại đây.</p><form method="POST" action="{{ route('settings.zalo.group') }}">@csrf @method('PUT')<select name="chat_id"><option value="">Không gửi vào nhóm</option>@foreach($zaloChats->where('chat_type','GROUP') as $chat)<option value="{{ $chat->chat_id }}" @selected($chat->is_group_target)>{{ $chat->display_name ?: 'Nhóm '.$chat->chat_id }}</option>@endforeach</select><button class="btn primary"><i data-lucide="save"></i>Lưu nhóm</button></form><a href="https://bot.zaloplatforms.com/groups/invite/bot.sJxDUGyk" target="_blank" rel="noopener">Mời Bot vào nhóm Zalo</a>@else<p>{{ $zaloChats->contains('is_group_target',true) ? 'Quản trị viên đã cấu hình nhóm nhận thông báo.' : 'Chưa cấu hình nhóm nhận thông báo.' }}</p>@endif</div>
    </div>
   </section>
+  @php($notificationPrefs=auth()->user()->notification_preferences??['in_app'=>true,'zalo_personal'=>true,'assignments'=>true,'status_changes'=>true,'deadlines'=>true])
+  @php($groupChat=$zaloChats->firstWhere('is_group_target',true))
+  @php($groupPrefs=$groupChat?->notification_preferences??['task_created'=>true,'task_updated'=>true,'status_changed'=>true,'task_deleted'=>true,'deadlines'=>true])
+  <section class="settings-card zalo-integration-card" id="notification-options">
+   <div class="card-heading"><div><h3>Tùy chọn thông báo</h3><p>Chọn kênh và loại sự kiện bạn muốn nhận.</p></div><i data-lucide="bell-ring"></i></div>
+   <div class="settings-main-grid">
+    <form method="POST" action="{{ route('settings.notifications') }}">@csrf @method('PUT')<h4>Thông báo cá nhân</h4>@foreach([['in_app','Thông báo trong ứng dụng'],['zalo_personal','Zalo cá nhân'],['assignments','Khi được giao task'],['status_changes','Khi trạng thái thay đổi'],['deadlines','Deadline và quá hạn']] as [$key,$label])<label class="setting-switch"><span><b>{{ $label }}</b></span><input type="checkbox" name="{{ $key }}" value="1" @checked($notificationPrefs[$key]??true)><i></i></label>@endforeach<button class="btn primary"><i data-lucide="save"></i>Lưu cá nhân</button></form>
+    @if(auth()->user()->role==='admin'&&$groupChat)<form method="POST" action="{{ route('settings.zalo.group') }}">@csrf @method('PUT')<input type="hidden" name="chat_id" value="{{ $groupChat->chat_id }}"><input type="hidden" name="notification_options" value="1"><h4>Thông báo nhóm chung</h4>@foreach([['task_created','Tạo task mới'],['task_updated','Cập nhật task'],['status_changed','Đổi trạng thái'],['task_deleted','Xóa task'],['deadlines','Deadline và quá hạn']] as [$key,$label])<label class="setting-switch"><span><b>{{ $label }}</b></span><input type="checkbox" name="{{ $key }}" value="1" @checked($groupPrefs[$key]??true)><i></i></label>@endforeach<button class="btn primary"><i data-lucide="save"></i>Lưu nhóm</button></form>@elseif(auth()->user()->role==='admin')<div><h4>Thông báo nhóm chung</h4><p>Hãy kết nối và chọn một nhóm Zalo trước.</p></div>@endif
+   </div>
+  </section>
  </main>
 </div>
 @endsection

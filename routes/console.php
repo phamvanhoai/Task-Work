@@ -20,12 +20,12 @@ Artisan::command('notifications:due-tasks', function () {
         if ($task->assignee) {
             $alreadySent = $task->assignee->notifications()->whereDate('created_at', today())->where('data', 'like', '%'.addcslashes($url, '%_').'%')->exists();
             if (! $alreadySent) {
-                $task->assignee->notify(new WorkspaceNotification($title, $task->title.' · '.$task->due_date->format('d/m/Y'), $url, $overdue ? 'triangle-alert' : 'clock-3', $overdue ? 'orange' : 'blue'));
+                $task->assignee->notify(new WorkspaceNotification($title, $task->title.' · '.$task->due_date->format('d/m/Y'), $url, $overdue ? 'triangle-alert' : 'clock-3', $overdue ? 'orange' : 'blue', 'deadlines'));
             }
         }
         if (Cache::add('zalo-deadline-'.$task->id.'-'.today()->format('Y-m-d'), true, now()->endOfDay())) {
             $message = $task->title."\nDự án: ".$task->project->name."\nNgười phụ trách: ".($task->assignee?->name ?? 'Chưa giao')."\nDeadline: ".$task->due_date->format('d/m/Y');
-            app(ZaloBotService::class)->sendGroupNotification($title, $message, $url);
+            app(ZaloBotService::class)->sendGroupNotification('deadlines', $title, $message, $url);
         }
     });
     $this->info('Đã kiểm tra thông báo deadline.');

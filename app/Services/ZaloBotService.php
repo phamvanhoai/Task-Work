@@ -47,11 +47,14 @@ class ZaloBotService
         }
     }
 
-    public function sendGroupNotification(string $title, string $message, string $url): bool
+    public function sendGroupNotification(string $event, string $title, string $message, string $url): bool
     {
-        $groupChatId = ZaloChat::where('is_group_target', true)->value('chat_id');
+        $group = ZaloChat::where('is_group_target', true)->first();
+        if (! $group || ! ($group->notification_preferences[$event] ?? true)) {
+            return false;
+        }
 
-        return $groupChatId ? $this->sendMessage($groupChatId, "**{$title}**\n{$message}\n{$url}") : false;
+        return $this->sendMessage($group->chat_id, "**{$title}**\n{$message}\n{$url}");
     }
 
     public function endpoint(string $method): string

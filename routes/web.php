@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [WorkspaceController::class, 'settings'])->name('settings');
     Route::put('/settings/profile', [WorkspaceController::class, 'updateProfile'])->name('settings.profile');
     Route::put('/settings/preferences', [WorkspaceController::class, 'updatePreferences'])->name('settings.preferences');
+    Route::put('/settings/notifications', [WorkspaceController::class, 'updateNotificationPreferences'])->name('settings.notifications');
     Route::put('/settings/password', [WorkspaceController::class, 'updatePassword'])->name('settings.password');
     Route::delete('/settings/sessions', [WorkspaceController::class, 'destroyOtherSessions'])->name('settings.sessions.destroy');
     Route::get('/settings/export', [WorkspaceController::class, 'exportSettings'])->name('settings.export');

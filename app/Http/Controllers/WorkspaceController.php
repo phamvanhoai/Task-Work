@@ -237,10 +237,21 @@ class WorkspaceController extends Controller
         $data = $request->validate(['chat_id' => ['nullable', Rule::exists('zalo_chats', 'chat_id')->where('chat_type', 'GROUP')]]);
         ZaloChat::where('is_group_target', true)->update(['is_group_target' => false]);
         if ($data['chat_id'] ?? null) {
-            ZaloChat::where('chat_id', $data['chat_id'])->update(['is_group_target' => true]);
+            $updates = ['is_group_target' => true];
+            if ($request->boolean('notification_options')) {
+                $updates['notification_preferences'] = collect(['task_created', 'task_updated', 'status_changed', 'task_deleted', 'deadlines'])->mapWithKeys(fn ($key) => [$key => $request->boolean($key)])->all();
+            }
+            ZaloChat::where('chat_id', $data['chat_id'])->update($updates);
         }
 
         return back()->with('success', 'Đã cập nhật nhóm nhận thông báo Zalo.');
+    }
+
+    public function updateNotificationPreferences(Request $request): RedirectResponse
+    {
+        $request->user()->update(['notification_preferences' => collect(['in_app', 'zalo_personal', 'assignments', 'status_changes', 'deadlines'])->mapWithKeys(fn ($key) => [$key => $request->boolean($key)])->all()]);
+
+        return back()->with('success', 'Đã lưu tùy chọn thông báo.');
     }
 
     public function unlinkZalo(Request $request): RedirectResponse

@@ -272,4 +272,25 @@ class ExampleTest extends TestCase
         Http::assertSentCount(1);
         Http::assertSent(fn ($request) => $request['chat_id'] === 'deadline-group' && str_contains($request['text'], 'ngày mai'));
     }
+
+    public function test_notification_preferences_control_personal_and_group_channels(): void
+    {
+        config(['services.zalo_bot.token' => 'test-token']);
+        Http::fake(['*' => Http::response(['ok' => true])]);
+        $user = User::factory()->create(['role' => 'admin', 'zalo_chat_id' => 'private-chat']);
+        $group = ZaloChat::create(['chat_id' => 'group-chat', 'chat_type' => 'GROUP', 'is_group_target' => true]);
+
+        $this->actingAs($user)->put(route('settings.notifications'), [
+            'in_app' => '1', 'assignments' => '1', 'deadlines' => '1',
+        ])->assertRedirect();
+        $this->actingAs($user)->put(route('settings.zalo.group'), [
+            'chat_id' => $group->chat_id, 'notification_options' => '1', 'deadlines' => '1',
+        ])->assertRedirect();
+
+        $this->assertFalse($user->fresh()->notification_preferences['zalo_personal']);
+        $this->assertFalse($group->fresh()->notification_preferences['task_created']);
+        $user->notify(new WorkspaceNotification('Phân công', 'Không gửi Zalo', route('dashboard'), category: 'assignments'));
+        Http::assertNothingSent();
+        $this->assertCount(1, $user->notifications);
+    }
 }
