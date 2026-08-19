@@ -12,15 +12,19 @@ class ZaloBotWebhookController extends Controller
 {
     public function __invoke(Request $request, ZaloBotService $bot): JsonResponse
     {
+        $message = $request->input('result.message', []);
+        $chatId = (string) data_get($message, 'chat.id', '');
+        if ($chatId === '') {
+            return response()->json(['message' => 'Webhook ready']);
+        }
+
         $secret = (string) config('services.zalo_bot.webhook_secret');
         if ($secret === '' || ! hash_equals($secret, (string) $request->header('X-Bot-Api-Secret-Token'))) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $message = $request->input('result.message', []);
-        $chatId = (string) data_get($message, 'chat.id', '');
         $chatType = strtoupper((string) data_get($message, 'chat.chat_type', ''));
-        if ($chatId === '' || ! in_array($chatType, ['PRIVATE', 'GROUP'], true)) {
+        if (! in_array($chatType, ['PRIVATE', 'GROUP'], true)) {
             return response()->json(['message' => 'Ignored']);
         }
 
