@@ -12,6 +12,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TaskController extends Controller
 {
@@ -69,6 +74,40 @@ class TaskController extends Controller
     public function create(Request $request): View
     {
         return view('tasks.form', ['task' => new Task(['project_id' => $request->project_id]), 'projects' => Project::orderBy('name')->get(), 'users' => User::orderBy('name')->get()]);
+    }
+
+    public function exportWeekly(Request $request): StreamedResponse
+    {
+        $tasks = $this->filteredTasks($request)->with(['project', 'assignee', 'reporter'])->orderBy('due_date')->orderBy('id')->get();
+        $template = resource_path('templates/Project Weekly Report_GroupName.xlsx');
+        $spreadsheet = IOFactory::load($template);
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('B2', $request->filled('project_id') ? Project::find($request->integer('project_id'))?->name : 'TaskWork');
+        $sheet->setCellValue('B3', today()->startOfWeek()->format('d/m/Y').'-'.today()->endOfWeek()->format('d/m/Y'));
+        $sheet->removeRow(4, max(1, $sheet->getHighestRow() - 3));
+
+        $statusLabels = ['todo' => 'Pending', 'in_progress' => 'In Progress', 'review' => 'In Progress', 'done' => 'Completed'];
+        $row = 4;
+        $row = $this->writeReportSection($sheet, $row, 'I. Status Report', ['#', 'Project Task', 'In-charge', 'Status', 'Notes'], $tasks->map(fn (Task $task, int $index) => [
+            $index + 1, $task->title, $task->assignee?->name ?? 'Unassigned', $statusLabels[$task->status], $task->description ?: $task->project->name,
+        ])->all(), true);
+        $overdue = $tasks->filter(fn (Task $task) => $task->due_date?->isPast() && $task->status !== 'done')->values();
+        $row = $this->writeReportSection($sheet, $row, 'II. Project Issues', ['#', 'Project Issue', 'Owner', 'Status', 'Notes (Solution, Suggestion, etc.)'], $overdue->map(fn (Task $task, int $index) => [
+            $index + 1, $task->title, $task->reporter?->name ?? '—', $statusLabels[$task->status], 'Overdue: '.$task->due_date->format('d/m/Y'),
+        ])->all(), true);
+        $nextWeek = $tasks->filter(fn (Task $task) => $task->due_date?->between(today()->addWeek()->startOfWeek(), today()->addWeek()->endOfWeek()))->values();
+        $row = $this->writeReportSection($sheet, $row, 'III. Next Week Plan', ['#', 'Project Work Item', 'Deadline', 'In-charge', 'Notes (Task Details, etc.)'], $nextWeek->map(fn (Task $task, int $index) => [
+            $index + 1, $task->title, $task->due_date->format('d/m/Y'), $task->assignee?->name ?? 'Unassigned', $task->description ?: $task->project->name,
+        ])->all());
+        $this->writeReportSection($sheet, $row, 'IV. Other Project Matters/Suggestions', ['#', 'Project Matter/Suggestions', 'Raised By', 'Date', 'Notes'], []);
+        $sheet->freezePane('A4');
+
+        $filename = 'Project Weekly Report_'.today()->format('Y-m-d').'.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            (new Xlsx($spreadsheet))->save('php://output');
+            $spreadsheet->disconnectWorksheets();
+        }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
     }
 
     public function store(Request $request): RedirectResponse
@@ -137,6 +176,57 @@ class TaskController extends Controller
         return $request->validate(['project_id' => ['required', 'exists:projects,id'], 'title' => ['required', 'string', 'max:200'], 'description' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['todo', 'in_progress', 'review', 'done'])], 'priority' => ['required', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'assignee_id' => ['nullable', 'exists:users,id'], 'due_date' => ['nullable', 'date']]);
+    }
+
+    private function filteredTasks(Request $request)
+    {
+        return Task::query()
+            ->when($request->search, fn ($query, $value) => $query->where('title', 'like', "%$value%"))
+            ->when($request->status, fn ($query, $value) => $query->where('status', $value))
+            ->when($request->priority, fn ($query, $value) => $query->where('priority', $value))
+            ->when($request->project_id, fn ($query, $value) => $query->where('project_id', $value))
+            ->when($request->due === 'today', fn ($query) => $query->whereDate('due_date', today()))
+            ->when($request->due === 'tomorrow', fn ($query) => $query->whereDate('due_date', today()->addDay()))
+            ->when($request->due === 'week', fn ($query) => $query->whereBetween('due_date', [today()->startOfWeek(), today()->endOfWeek()]))
+            ->when($request->due === 'none', fn ($query) => $query->whereNull('due_date'))
+            ->when($request->boolean('overdue'), fn ($query) => $query->whereDate('due_date', '<', today())->where('status', '!=', 'done'));
+    }
+
+    private function writeReportSection($sheet, int $row, string $title, array $headers, array $rows, bool $statusValidation = false): int
+    {
+        $sheet->setCellValue("A$row", $title);
+        $sheet->duplicateStyle($sheet->getStyle('A1'), "A$row:E$row");
+        $sheet->getStyle("A$row")->getFont()->setSize(12);
+        $row++;
+        $sheet->fromArray($headers, null, "A$row");
+        $sheet->duplicateStyle($sheet->getStyle('A1'), "A$row:E$row");
+        $sheet->getStyle("A$row:E$row")->getFont()->setBold(true)->setItalic(true)->setSize(11);
+        $sheet->getStyle("A$row:E$row")->getBorders()->getAllBorders()->setBorderStyle('thin');
+        $row++;
+        $dataStart = $row;
+        foreach ($rows ?: [['', '', '', '', '']] as $values) {
+            foreach (['A', 'B', 'C', 'D', 'E'] as $index => $column) {
+                $value = $values[$index] ?? '';
+                if (is_int($value) || is_float($value)) {
+                    $sheet->setCellValue("$column$row", $value);
+                } else {
+                    $sheet->setCellValueExplicit("$column$row", (string) $value, DataType::TYPE_STRING);
+                }
+            }
+            $sheet->getStyle("A$row:E$row")->getBorders()->getAllBorders()->setBorderStyle('thin');
+            $sheet->getStyle("A$row:E$row")->getAlignment()->setVertical('top')->setWrapText(true);
+            $sheet->getStyle("A$row")->getAlignment()->setHorizontal('center');
+            $row++;
+        }
+        if ($statusValidation && $row > $dataStart) {
+            $validation = new DataValidation;
+            $validation->setType(DataValidation::TYPE_LIST)->setAllowBlank(true)->setFormula1('"Pending, In Progress, Completed"');
+            for ($validationRow = $dataStart; $validationRow < $row; $validationRow++) {
+                $sheet->getCell("D$validationRow")->setDataValidation(clone $validation);
+            }
+        }
+
+        return $row + 1;
     }
 
     private function sendTaskNotification(Task $task, ?int $previousAssignee, string $previousStatus): void
