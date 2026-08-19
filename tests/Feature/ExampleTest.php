@@ -111,6 +111,21 @@ class ExampleTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'new-member@example.com', 'role' => 'member']);
     }
 
+    public function test_members_are_exported_to_real_excel_columns(): void
+    {
+        $admin = User::factory()->create(['name' => 'Pham Van Hoai', 'email' => 'hoai@example.com', 'phone' => '0333622144', 'role' => 'admin']);
+        $response = $this->actingAs($admin)->get(route('members.export'));
+        $response->assertOk()->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $path = tempnam(sys_get_temp_dir(), 'members-');
+        file_put_contents($path, $response->streamedContent());
+        $sheet = IOFactory::load($path)->getActiveSheet();
+        unlink($path);
+
+        $this->assertSame('Họ và tên', $sheet->getCell('B1')->getValue());
+        $this->assertSame('Pham Van Hoai', $sheet->getCell('B2')->getValue());
+        $this->assertSame('0333622144', $sheet->getCell('D2')->getValue());
+    }
+
     public function test_regular_member_cannot_manage_other_members(): void
     {
         $member = User::factory()->create(['role' => 'member']);

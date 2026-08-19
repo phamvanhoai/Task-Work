@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class)->except('show');
     Route::get('/calendar', [WorkspaceController::class, 'calendar'])->name('calendar');
     Route::get('/reports', [WorkspaceController::class, 'reports'])->name('reports');
+    Route::get('/members/export', [WorkspaceController::class, 'exportMembers'])->name('members.export');
     Route::get('/members', [WorkspaceController::class, 'members'])->name('members');
     Route::post('/members', [WorkspaceController::class, 'inviteMember'])->name('members.store');
     Route::put('/members/{member}', [WorkspaceController::class, 'updateMember'])->name('members.update');

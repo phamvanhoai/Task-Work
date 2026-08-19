@@ -16,6 +16,10 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WorkspaceController extends Controller
 {
@@ -111,6 +115,38 @@ class WorkspaceController extends Controller
             ->when($request->role, fn ($query, $role) => $query->where('role', $role))->orderBy('name')->paginate(8)->withQueryString();
 
         return view('workspace.members', ['members' => $members, 'roleCounts' => $roleCounts]);
+    }
+
+    public function exportMembers(Request $request): StreamedResponse
+    {
+        $members = User::query()
+            ->when($request->search, fn ($query, $search) => $query->where(fn ($query) => $query->where('name', 'like', "%$search%")->orWhere('email', 'like', "%$search%")))
+            ->when($request->role, fn ($query, $role) => $query->where('role', $role))
+            ->withCount(['projects', 'tasks', 'tasks as done_count' => fn ($query) => $query->where('status', 'done')])
+            ->orderBy('name')->get();
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet()->setTitle('Thành viên');
+        $headers = ['STT', 'Họ và tên', 'Email', 'Số điện thoại', 'Vai trò', 'Dự án tham gia', 'Task đang làm', 'Đã hoàn thành', 'Hiệu suất', 'Trạng thái'];
+        $sheet->fromArray($headers, null, 'A1');
+        $sheet->getStyle('A1:J1')->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
+        $sheet->getStyle('A1:J1')->getFill()->setFillType('solid')->getStartColor()->setARGB('FF4F46E5');
+        foreach ($members as $index => $member) {
+            $row = $index + 2;
+            $rate = $member->tasks_count ? round($member->done_count / $member->tasks_count * 100) : 0;
+            $sheet->fromArray([$index + 1, $member->name, $member->email], null, "A$row");
+            $sheet->setCellValueExplicit("D$row", (string) ($member->phone ?? ''), DataType::TYPE_STRING);
+            $sheet->fromArray([$member->role === 'admin' ? 'Leader/Admin' : 'Thành viên', $member->projects_count, max(0, $member->tasks_count - $member->done_count), $member->done_count, $rate.'%', 'Đang hoạt động'], null, "E$row");
+        }
+        $sheet->freezePane('A2')->setAutoFilter('A1:J1');
+        $sheet->getStyle('A1:J'.max(2, $members->count() + 1))->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setARGB('FFE2E8F0');
+        foreach (range('A', 'J') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            (new Xlsx($spreadsheet))->save('php://output');
+            $spreadsheet->disconnectWorksheets();
+        }, 'danh-sach-thanh-vien-'.today()->format('Y-m-d').'.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
     }
 
     public function inviteMember(Request $request): RedirectResponse

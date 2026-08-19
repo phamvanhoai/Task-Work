@@ -394,10 +394,4 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-settings-link]').forEach((item) => item.classList.remove('active'));
         link.classList.add('active');
     }));
-    document.querySelector('[data-member-export]')?.addEventListener('click', () => {
-        const rows = [...document.querySelectorAll('.member-table-wrap tr')].map((row) => [...row.querySelectorAll('th,td')].map((cell) => `"${cell.innerText.trim().replaceAll('"', '""')}"`).join(','));
-        const blob = new Blob([`\uFEFF${rows.join('\n')}`], { type: 'text/csv;charset=utf-8' });
-        const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'danh-sach-thanh-vien.csv' });
-        link.click(); URL.revokeObjectURL(link.href);
-    });
 });
