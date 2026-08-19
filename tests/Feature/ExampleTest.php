@@ -51,6 +51,31 @@ class ExampleTest extends TestCase
         $this->assertNotNull($task->fresh()->completed_at);
     }
 
+    public function test_tasks_can_be_reordered_inside_a_kanban_column(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::create(['name' => 'Ordering', 'key' => 'ORD', 'owner_id' => $user->id]);
+        $first = Task::create(['project_id' => $project->id, 'title' => 'First', 'status' => 'todo', 'priority' => 'medium', 'reporter_id' => $user->id, 'sort_order' => 0]);
+        $second = Task::create(['project_id' => $project->id, 'title' => 'Second', 'status' => 'todo', 'priority' => 'medium', 'reporter_id' => $user->id, 'sort_order' => 1]);
+
+        $this->actingAs($user)->patchJson(route('tasks.status', $second), ['status' => 'todo', 'position' => 0])->assertOk();
+
+        $this->assertSame([$second->id, $first->id], Task::where('status', 'todo')->orderBy('sort_order')->pluck('id')->all());
+    }
+
+    public function test_task_can_be_placed_at_a_specific_position_in_another_kanban_column(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::create(['name' => 'Moving', 'key' => 'MOV', 'owner_id' => $user->id]);
+        $existing = Task::create(['project_id' => $project->id, 'title' => 'Existing', 'status' => 'review', 'priority' => 'medium', 'reporter_id' => $user->id, 'sort_order' => 0]);
+        $moving = Task::create(['project_id' => $project->id, 'title' => 'Moving', 'status' => 'todo', 'priority' => 'medium', 'reporter_id' => $user->id, 'sort_order' => 0]);
+
+        $this->actingAs($user)->patchJson(route('tasks.status', $moving), ['status' => 'review', 'position' => 0])->assertOk();
+
+        $this->assertSame('review', $moving->fresh()->status);
+        $this->assertSame([$moving->id, $existing->id], Task::where('status', 'review')->orderBy('sort_order')->pluck('id')->all());
+    }
+
     public function test_member_can_be_added_from_members_screen(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

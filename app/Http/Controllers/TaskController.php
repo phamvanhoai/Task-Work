@@ -9,6 +9,7 @@ use App\Notifications\WorkspaceNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -40,13 +41,17 @@ class TaskController extends Controller
             ->when($request->due === 'week', fn ($q) => $q->whereBetween('due_date', [today()->startOfWeek(), today()->endOfWeek()]))
             ->when($request->due === 'none', fn ($q) => $q->whereNull('due_date'))
             ->when($request->boolean('overdue'), fn ($q) => $q->whereDate('due_date', '<', today())->where('status', '!=', 'done'));
-        match ($sort) {
-            'oldest' => $tasks->oldest(),
-            'due_asc' => $tasks->orderByRaw('due_date IS NULL')->orderBy('due_date'),
-            'due_desc' => $tasks->orderByRaw('due_date IS NULL')->orderByDesc('due_date'),
-            'priority' => $tasks->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END")->latest(),
-            default => $tasks->latest(),
-        };
+        if ($viewMode === 'kanban') {
+            $tasks->orderBy('sort_order')->orderBy('id');
+        } else {
+            match ($sort) {
+                'oldest' => $tasks->oldest(),
+                'due_asc' => $tasks->orderByRaw('due_date IS NULL')->orderBy('due_date'),
+                'due_desc' => $tasks->orderByRaw('due_date IS NULL')->orderByDesc('due_date'),
+                'priority' => $tasks->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END")->latest(),
+                default => $tasks->latest(),
+            };
+        }
         $tasks = $tasks->paginate($perPage)->withQueryString();
 
         return view('tasks.index', [
@@ -68,7 +73,9 @@ class TaskController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $task = Task::create($this->validated($request) + ['reporter_id' => auth()->id()]);
+        $data = $this->validated($request);
+        $data['sort_order'] = ((int) Task::where('status', $data['status'])->max('sort_order')) + 1;
+        $task = Task::create($data + ['reporter_id' => auth()->id()]);
         if ($task->assignee && $task->assignee_id !== auth()->id()) {
             $task->assignee->notify(new WorkspaceNotification('Bạn được giao một task mới', $task->title, route('tasks.index', ['search' => $task->title]), 'clipboard-check', 'blue'));
         }
@@ -90,6 +97,9 @@ class TaskController extends Controller
         $previousAssignee = $task->assignee_id;
         $previousStatus = $task->status;
         $data = $this->validated($request);
+        if ($data['status'] !== $previousStatus) {
+            $data['sort_order'] = ((int) Task::where('status', $data['status'])->max('sort_order')) + 1;
+        }
         $data['completed_at'] = $data['status'] === 'done' ? ($task->completed_at ?? now()) : null;
         $task->update($data);
         $this->sendTaskNotification($task, $previousAssignee, $previousStatus);
@@ -100,11 +110,16 @@ class TaskController extends Controller
     public function updateStatus(Request $request, Task $task): JsonResponse
     {
         $previousStatus = $task->status;
-        $data = $request->validate(['status' => ['required', Rule::in(['todo', 'in_progress', 'review', 'done'])]]);
-        $task->update([
-            'status' => $data['status'],
-            'completed_at' => $data['status'] === 'done' ? ($task->completed_at ?? now()) : null,
-        ]);
+        $data = $request->validate(['status' => ['required', Rule::in(['todo', 'in_progress', 'review', 'done'])], 'position' => ['nullable', 'integer', 'min:0']]);
+        DB::transaction(function () use ($task, $data) {
+            $task->update(['status' => $data['status'], 'completed_at' => $data['status'] === 'done' ? ($task->completed_at ?? now()) : null]);
+            $orderedIds = Task::where('status', $data['status'])->whereKeyNot($task->id)->orderBy('sort_order')->orderBy('id')->pluck('id')->all();
+            $position = min((int) ($data['position'] ?? count($orderedIds)), count($orderedIds));
+            array_splice($orderedIds, $position, 0, [$task->id]);
+            foreach ($orderedIds as $index => $id) {
+                Task::whereKey($id)->update(['sort_order' => $index]);
+            }
+        });
         $this->sendTaskNotification($task, $task->assignee_id, $previousStatus);
 
         return response()->json(['message' => 'Đã cập nhật trạng thái.', 'status' => $task->status]);

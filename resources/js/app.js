@@ -208,6 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const kanban = document.querySelector('.task-kanban');
     if (kanban) {
         let draggedCard = null;
+        let originalList = null;
+        let originalNext = null;
+        let dropped = false;
         const updateKanbanCounts = () => document.querySelectorAll('.kanban-column').forEach((column) => {
             const count = column.querySelectorAll('.kanban-task').length;
             column.querySelector('header b').textContent = count;
@@ -227,20 +230,36 @@ document.addEventListener('DOMContentLoaded', () => {
         kanban.addEventListener('dragstart', (event) => {
             draggedCard = event.target.closest('.kanban-task');
             if (!draggedCard) return;
+            originalList = draggedCard.parentElement;
+            originalNext = draggedCard.nextElementSibling;
+            dropped = false;
             draggedCard.classList.add('dragging');
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', draggedCard.dataset.taskId);
         });
         kanban.addEventListener('dragend', () => {
+            if (draggedCard && !dropped && originalList) {
+                if (originalNext?.parentElement === originalList) originalList.insertBefore(draggedCard, originalNext);
+                else originalList.appendChild(draggedCard);
+            }
             draggedCard?.classList.remove('dragging');
             document.querySelectorAll('.kanban-column.drag-over').forEach((column) => column.classList.remove('drag-over'));
+            updateKanbanCounts();
             draggedCard = null;
+            originalList = null;
+            originalNext = null;
         });
+        const insertionPoint = (list, pointerY) => [...list.querySelectorAll('.kanban-task:not(.dragging)')].find((card) => pointerY < card.getBoundingClientRect().top + card.offsetHeight / 2) ?? null;
         document.querySelectorAll('.kanban-column').forEach((column) => {
             column.addEventListener('dragover', (event) => {
                 event.preventDefault();
                 event.dataTransfer.dropEffect = 'move';
                 column.classList.add('drag-over');
+                if (!draggedCard) return;
+                const targetList = column.querySelector('.kanban-list');
+                targetList.querySelector('.kanban-empty')?.remove();
+                targetList.insertBefore(draggedCard, insertionPoint(targetList, event.clientY));
+                updateKanbanCounts();
             });
             column.addEventListener('dragleave', (event) => {
                 if (!column.contains(event.relatedTarget)) column.classList.remove('drag-over');
@@ -248,21 +267,23 @@ document.addEventListener('DOMContentLoaded', () => {
             column.addEventListener('drop', async (event) => {
                 event.preventDefault();
                 column.classList.remove('drag-over');
-                if (!draggedCard || draggedCard.closest('.kanban-column') === column) return;
-                const originalList = draggedCard.parentElement;
+                if (!draggedCard) return;
                 const targetList = column.querySelector('.kanban-list');
-                targetList.appendChild(draggedCard);
+                if (draggedCard.parentElement !== targetList) targetList.appendChild(draggedCard);
+                const position = [...targetList.querySelectorAll('.kanban-task')].indexOf(draggedCard);
+                dropped = true;
                 updateKanbanCounts();
                 try {
                     const response = await fetch(draggedCard.dataset.statusUrl, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                        body: JSON.stringify({ status: column.dataset.kanbanStatus }),
+                        body: JSON.stringify({ status: column.dataset.kanbanStatus, position }),
                     });
                     if (!response.ok) throw new Error('Update failed');
-                    showToast('Đã cập nhật trạng thái task.');
+                    showToast('Đã lưu vị trí task.');
                 } catch {
-                    originalList.appendChild(draggedCard);
+                    if (originalNext?.parentElement === originalList) originalList.insertBefore(draggedCard, originalNext);
+                    else originalList.appendChild(draggedCard);
                     updateKanbanCounts();
                     showToast('Không thể cập nhật trạng thái. Vui lòng thử lại.', true);
                 }
