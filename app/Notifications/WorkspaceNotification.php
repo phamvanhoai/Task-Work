@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\ZaloBotChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -13,7 +14,7 @@ class WorkspaceNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', ZaloBotChannel::class];
     }
 
     public function toArray(object $notifiable): array

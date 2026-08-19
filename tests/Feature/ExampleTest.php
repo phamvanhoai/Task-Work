@@ -6,9 +6,11 @@ use App\Models\Label;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\ZaloChat;
 use App\Notifications\WorkspaceNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
@@ -206,5 +208,37 @@ class ExampleTest extends TestCase
         $owner->notify(new WorkspaceNotification('Private', 'Only owner', route('dashboard')));
 
         $this->actingAs($stranger)->get(route('notifications.show', $owner->notifications()->first()))->assertForbidden();
+    }
+
+    public function test_zalo_webhook_links_a_private_chat_with_a_secure_code(): void
+    {
+        config(['services.zalo_bot.token' => 'test-token', 'services.zalo_bot.webhook_secret' => 'test-secret']);
+        Http::fake(['*' => Http::response(['ok' => true, 'result' => ['message_id' => '1']])]);
+        $user = User::factory()->create(['zalo_link_code' => 'LINK123ABC']);
+        $payload = ['ok' => true, 'result' => ['event_name' => 'message.text.received', 'message' => [
+            'from' => ['id' => 'zalo-user', 'display_name' => 'Zalo User', 'is_bot' => false],
+            'chat' => ['id' => 'private-chat-1', 'chat_type' => 'PRIVATE'],
+            'text' => '/link LINK123ABC',
+        ]]];
+
+        $this->postJson(route('webhooks.zalo-bot'), $payload)->assertForbidden();
+        $this->withHeader('X-Bot-Api-Secret-Token', 'test-secret')->postJson(route('webhooks.zalo-bot'), $payload)->assertOk();
+
+        $this->assertSame('private-chat-1', $user->fresh()->zalo_chat_id);
+        $this->assertDatabaseHas('zalo_chats', ['chat_id' => 'private-chat-1', 'chat_type' => 'PRIVATE']);
+    }
+
+    public function test_workspace_notification_is_sent_to_private_and_group_zalo_chats(): void
+    {
+        config(['services.zalo_bot.token' => 'test-token']);
+        Http::fake(['*' => Http::response(['ok' => true, 'result' => ['message_id' => '1']])]);
+        $user = User::factory()->create(['zalo_chat_id' => 'private-chat']);
+        ZaloChat::create(['chat_id' => 'group-chat', 'chat_type' => 'GROUP', 'is_group_target' => true]);
+
+        $user->notify(new WorkspaceNotification('Task mới', 'Kiểm tra Zalo', route('dashboard')));
+
+        Http::assertSentCount(2);
+        Http::assertSent(fn ($request) => $request['chat_id'] === 'private-chat');
+        Http::assertSent(fn ($request) => $request['chat_id'] === 'group-chat');
     }
 }

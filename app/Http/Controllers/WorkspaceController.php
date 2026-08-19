@@ -6,11 +6,13 @@ use App\Models\Label;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\ZaloChat;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -220,7 +222,32 @@ class WorkspaceController extends Controller
             $sessions = \DB::table('sessions')->where('user_id', $request->user()->id)->orderByDesc('last_activity')->get();
         }
 
-        return view('workspace.settings', compact('sessions'));
+        $user = $request->user();
+        if (! $user->zalo_chat_id && ! $user->zalo_link_code) {
+            $user->update(['zalo_link_code' => Str::upper(Str::random(10))]);
+        }
+        $zaloChats = ZaloChat::orderByDesc('last_seen_at')->get();
+
+        return view('workspace.settings', compact('sessions', 'zaloChats'));
+    }
+
+    public function updateZaloGroup(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->role === 'admin', 403);
+        $data = $request->validate(['chat_id' => ['nullable', Rule::exists('zalo_chats', 'chat_id')->where('chat_type', 'GROUP')]]);
+        ZaloChat::where('is_group_target', true)->update(['is_group_target' => false]);
+        if ($data['chat_id'] ?? null) {
+            ZaloChat::where('chat_id', $data['chat_id'])->update(['is_group_target' => true]);
+        }
+
+        return back()->with('success', 'Đã cập nhật nhóm nhận thông báo Zalo.');
+    }
+
+    public function unlinkZalo(Request $request): RedirectResponse
+    {
+        $request->user()->update(['zalo_chat_id' => null, 'zalo_link_code' => Str::upper(Str::random(10))]);
+
+        return back()->with('success', 'Đã ngắt liên kết Zalo cá nhân.');
     }
 
     public function updateProfile(Request $request): RedirectResponse

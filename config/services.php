@@ -2,6 +2,11 @@
 
 return [
 
+    'zalo_bot' => [
+        'token' => env('ZALO_BOT_TOKEN'),
+        'webhook_secret' => env('ZALO_BOT_WEBHOOK_SECRET'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

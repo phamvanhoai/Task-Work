@@ -7,9 +7,11 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectTrackingExportController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\ZaloBotWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
+Route::post('/webhooks/zalo-bot', ZaloBotWebhookController::class)->name('webhooks.zalo-bot');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
@@ -37,6 +39,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/password', [WorkspaceController::class, 'updatePassword'])->name('settings.password');
     Route::delete('/settings/sessions', [WorkspaceController::class, 'destroyOtherSessions'])->name('settings.sessions.destroy');
     Route::get('/settings/export', [WorkspaceController::class, 'exportSettings'])->name('settings.export');
+    Route::put('/settings/zalo/group', [WorkspaceController::class, 'updateZaloGroup'])->name('settings.zalo.group');
+    Route::delete('/settings/zalo/link', [WorkspaceController::class, 'unlinkZalo'])->name('settings.zalo.unlink');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
