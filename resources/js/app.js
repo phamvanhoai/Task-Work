@@ -320,7 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
         form.action = editButton.dataset.action;
         form.elements.namedItem('name').value = editButton.dataset.name;
         form.elements.namedItem('email').value = editButton.dataset.email;
+        form.elements.namedItem('phone').value = editButton.dataset.phone || '';
+        form.elements.namedItem('job_title').value = editButton.dataset.jobTitle || '';
         form.elements.namedItem('role').value = editButton.dataset.role;
+        form.elements.namedItem('timezone').value = editButton.dataset.timezone || 'Asia/Ho_Chi_Minh';
+        form.elements.namedItem('locale').value = editButton.dataset.locale || 'vi';
+        form.elements.namedItem('bio').value = editButton.dataset.bio || '';
         form.elements.namedItem('password').value = '';
         memberEditModal.showModal();
     });

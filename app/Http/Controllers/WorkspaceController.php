@@ -155,6 +155,11 @@ class WorkspaceController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'job_title' => ['nullable', 'string', 'max:100'],
+            'timezone' => ['nullable', Rule::in(['Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'UTC'])],
+            'locale' => ['nullable', Rule::in(['vi', 'en'])],
+            'bio' => ['nullable', 'string', 'max:500'],
             'role' => ['required', Rule::in(['admin', 'member'])],
             'password' => ['required', 'string', 'min:8'],
         ]);
@@ -169,6 +174,11 @@ class WorkspaceController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($member)],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'job_title' => ['nullable', 'string', 'max:100'],
+            'timezone' => ['nullable', Rule::in(['Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'UTC'])],
+            'locale' => ['nullable', Rule::in(['vi', 'en'])],
+            'bio' => ['nullable', 'string', 'max:500'],
             'role' => ['required', Rule::in(['admin', 'member'])],
             'password' => ['nullable', 'string', 'min:8'],
         ]);

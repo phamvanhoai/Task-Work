@@ -105,10 +105,16 @@ class ExampleTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($admin)->post(route('members.store'), [
-            'name' => 'New Member', 'email' => 'new-member@example.com', 'role' => 'member', 'password' => 'Password123!',
+            'name' => 'New Member', 'email' => 'new-member@example.com', 'phone' => '0901234567',
+            'job_title' => 'Frontend Developer', 'timezone' => 'Asia/Ho_Chi_Minh', 'locale' => 'vi',
+            'bio' => 'Thành viên đội phát triển.', 'role' => 'member', 'password' => 'Password123!',
         ])->assertRedirect();
 
-        $this->assertDatabaseHas('users', ['email' => 'new-member@example.com', 'role' => 'member']);
+        $this->assertDatabaseHas('users', [
+            'email' => 'new-member@example.com', 'phone' => '0901234567',
+            'job_title' => 'Frontend Developer', 'timezone' => 'Asia/Ho_Chi_Minh',
+            'locale' => 'vi', 'bio' => 'Thành viên đội phát triển.', 'role' => 'member',
+        ]);
     }
 
     public function test_members_are_exported_to_real_excel_columns(): void
@@ -141,9 +147,15 @@ class ExampleTest extends TestCase
         $member = User::factory()->create(['role' => 'member']);
 
         $this->actingAs($admin)->put(route('members.update', $member), [
-            'name' => 'Updated Member', 'email' => $member->email, 'role' => 'admin', 'password' => '',
+            'name' => 'Updated Member', 'email' => $member->email, 'phone' => '0987654321',
+            'job_title' => 'Project Manager', 'timezone' => 'UTC', 'locale' => 'en',
+            'bio' => 'Updated profile.', 'role' => 'admin', 'password' => '',
         ])->assertRedirect();
-        $this->assertDatabaseHas('users', ['id' => $member->id, 'name' => 'Updated Member', 'role' => 'admin']);
+        $this->assertDatabaseHas('users', [
+            'id' => $member->id, 'name' => 'Updated Member', 'phone' => '0987654321',
+            'job_title' => 'Project Manager', 'timezone' => 'UTC', 'locale' => 'en',
+            'bio' => 'Updated profile.', 'role' => 'admin',
+        ]);
 
         $this->actingAs($admin)->delete(route('members.destroy', $member))->assertRedirect();
         $this->assertDatabaseMissing('users', ['id' => $member->id]);
