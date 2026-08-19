@@ -228,17 +228,31 @@ class ExampleTest extends TestCase
         $this->assertDatabaseHas('zalo_chats', ['chat_id' => 'private-chat-1', 'chat_type' => 'PRIVATE']);
     }
 
-    public function test_workspace_notification_is_sent_to_private_and_group_zalo_chats(): void
+    public function test_workspace_notification_is_sent_to_private_zalo_chat(): void
     {
         config(['services.zalo_bot.token' => 'test-token']);
         Http::fake(['*' => Http::response(['ok' => true, 'result' => ['message_id' => '1']])]);
         $user = User::factory()->create(['zalo_chat_id' => 'private-chat']);
-        ZaloChat::create(['chat_id' => 'group-chat', 'chat_type' => 'GROUP', 'is_group_target' => true]);
 
         $user->notify(new WorkspaceNotification('Task mới', 'Kiểm tra Zalo', route('dashboard')));
 
-        Http::assertSentCount(2);
+        Http::assertSentCount(1);
         Http::assertSent(fn ($request) => $request['chat_id'] === 'private-chat');
-        Http::assertSent(fn ($request) => $request['chat_id'] === 'group-chat');
+    }
+
+    public function test_every_new_task_is_broadcast_to_the_zalo_group_even_without_an_assignee(): void
+    {
+        config(['services.zalo_bot.token' => 'test-token']);
+        Http::fake(['*' => Http::response(['ok' => true, 'result' => ['message_id' => '1']])]);
+        $reporter = User::factory()->create();
+        $project = Project::create(['name' => 'Group Broadcast', 'key' => 'ZGB', 'owner_id' => $reporter->id]);
+        ZaloChat::create(['chat_id' => 'group-chat', 'chat_type' => 'GROUP', 'is_group_target' => true]);
+
+        $this->actingAs($reporter)->post(route('tasks.store'), [
+            'project_id' => $project->id, 'title' => 'Task chung', 'status' => 'todo', 'priority' => 'medium', 'assignee_id' => '',
+        ])->assertRedirect();
+
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => $request['chat_id'] === 'group-chat' && str_contains($request['text'], 'Task chung'));
     }
 }

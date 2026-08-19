@@ -42,8 +42,16 @@ class ZaloBotService
     public function sendNotification(?string $privateChatId, string $title, string $message, string $url): void
     {
         $text = "**{$title}**\n{$message}\n{$url}";
-        $targets = collect([$privateChatId, ZaloChat::where('is_group_target', true)->value('chat_id')])->filter()->unique();
-        $targets->each(fn (string $chatId) => $this->sendMessage($chatId, $text));
+        if ($privateChatId) {
+            $this->sendMessage($privateChatId, $text);
+        }
+    }
+
+    public function sendGroupNotification(string $title, string $message, string $url): bool
+    {
+        $groupChatId = ZaloChat::where('is_group_target', true)->value('chat_id');
+
+        return $groupChatId ? $this->sendMessage($groupChatId, "**{$title}**\n{$message}\n{$url}") : false;
     }
 
     public function endpoint(string $method): string

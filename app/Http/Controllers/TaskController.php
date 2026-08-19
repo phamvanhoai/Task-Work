@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\WorkspaceNotification;
+use App\Services\ZaloBotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -118,6 +119,7 @@ class TaskController extends Controller
         if ($task->assignee && $task->assignee_id !== auth()->id()) {
             $task->assignee->notify(new WorkspaceNotification('Bạn được giao một task mới', $task->title, route('tasks.index', ['search' => $task->title]), 'clipboard-check', 'blue'));
         }
+        $this->notifyZaloGroup($task, 'Task mới được tạo');
 
         return redirect()->route('tasks.index')->with('success', 'Đã tạo công việc.');
     }
@@ -142,6 +144,7 @@ class TaskController extends Controller
         $data['completed_at'] = $data['status'] === 'done' ? ($task->completed_at ?? now()) : null;
         $task->update($data);
         $this->sendTaskNotification($task, $previousAssignee, $previousStatus);
+        $this->notifyZaloGroup($task, 'Task vừa được cập nhật');
 
         return redirect()->route('tasks.index')->with('success', 'Đã cập nhật công việc.');
     }
@@ -160,12 +163,14 @@ class TaskController extends Controller
             }
         });
         $this->sendTaskNotification($task, $task->assignee_id, $previousStatus);
+        $this->notifyZaloGroup($task, 'Trạng thái task đã thay đổi');
 
         return response()->json(['message' => 'Đã cập nhật trạng thái.', 'status' => $task->status]);
     }
 
     public function destroy(Task $task): RedirectResponse
     {
+        $this->notifyZaloGroup($task, 'Task đã bị xóa');
         $task->delete();
 
         return back()->with('success', 'Đã xóa công việc.');
@@ -238,5 +243,13 @@ class TaskController extends Controller
             $statuses = ['todo' => 'Cần làm', 'in_progress' => 'Đang thực hiện', 'review' => 'Đang review', 'done' => 'Hoàn thành'];
             $task->assignee->notify(new WorkspaceNotification('Trạng thái task đã thay đổi', $task->title.' → '.($statuses[$task->status] ?? $task->status), route('tasks.index', ['search' => $task->title]), 'refresh-cw', $task->status === 'done' ? 'green' : 'orange'));
         }
+    }
+
+    private function notifyZaloGroup(Task $task, string $title): void
+    {
+        $task->loadMissing(['project', 'assignee']);
+        $statuses = ['todo' => 'Cần làm', 'in_progress' => 'Đang thực hiện', 'review' => 'Đang review', 'done' => 'Hoàn thành'];
+        $message = $task->title."\nDự án: ".$task->project->name."\nNgười phụ trách: ".($task->assignee?->name ?? 'Chưa giao')."\nTrạng thái: ".($statuses[$task->status] ?? $task->status);
+        app(ZaloBotService::class)->sendGroupNotification($title, $message, route('tasks.index', ['search' => $task->title]));
     }
 }
