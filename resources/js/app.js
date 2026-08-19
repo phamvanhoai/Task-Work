@@ -1,17 +1,17 @@
 import './bootstrap';
 import {
-    Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheckBig,
-    ClipboardCheck, Clock3, Columns3, createIcons, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
+    Activity, ArrowLeft, Bell, BellOff, CalendarDays, ChartNoAxesColumn, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheckBig, CircleDot,
+    ClipboardCheck, Clock3, Columns3, createIcons, Download, Flag, Folder, FolderKanban, FolderPlus, GitBranch, House, List, ListChecks, LoaderCircle,
     ListFilter, Menu, MessageSquare, MoreVertical, PanelLeftClose, Pencil, Play, Plus, Search, Settings, Share2,
-    Save, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, Trash2, TriangleAlert, UserPlus, Users, X,
+    RefreshCw, Save, ScanEye, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, Trash2, TriangleAlert, UserCheck, UserPlus, Users, X,
 } from 'lucide';
 
 document.addEventListener('DOMContentLoaded', () => {
     createIcons({ icons: {
-        Activity, Bell, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheckBig,
-        ClipboardCheck, Clock3, Columns3, Download, Folder, FolderKanban, GitBranch, House, List, ListChecks,
+        Activity, ArrowLeft, Bell, BellOff, CalendarDays, ChartNoAxesColumn, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheckBig, CircleDot,
+        ClipboardCheck, Clock3, Columns3, Download, Flag, Folder, FolderKanban, FolderPlus, GitBranch, House, List, ListChecks, LoaderCircle,
         ListFilter, Menu, MessageSquare, MoreVertical, PanelLeftClose, Pencil, Play, Plus, Search, Settings, Share2,
-        Save, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, Trash2, TriangleAlert, UserPlus, Users, X,
+        RefreshCw, Save, ScanEye, ShieldCheck, SlidersHorizontal, SquareCheckBig, Table2, Tag, Trash2, TriangleAlert, UserCheck, UserPlus, Users, X,
     } });
     const button = document.querySelector('.mobile-menu');
     const sidebar = document.querySelector('.app-sidebar');

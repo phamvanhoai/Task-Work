@@ -63,7 +63,11 @@ class ProjectController extends Controller
     {
         $project->load(['owner', 'members', 'tasks.assignee']);
 
-        return view('projects.show', compact('project'));
+        return view('projects.show', [
+            'project' => $project,
+            'projects' => Project::orderBy('name')->get(),
+            'users' => User::orderBy('name')->get(),
+        ]);
     }
 
     public function edit(Request $request, Project $project): View|JsonResponse
