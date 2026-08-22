@@ -1,0 +1,112 @@
+TASKWORK — BÀN GIAO NGỮ CẢNH CHO ANTIGRAVITY
+Ngày cập nhật: 2026-08-22
+
+1. MỤC TIÊU PROJECT
+
+Đây là hệ thống Laravel 13 quản lý công việc/dự án IT cho team, tên hiển thị TaskWork.
+Giao diện dùng Blade + Tailwind CSS + Vite + Lucide icons. Yêu cầu UI đồng bộ: header/sidebar dùng chung trên mọi trang, không dùng alert mặc định của trình duyệt; các hành động tạo/sửa/xóa ưu tiên modal + dropdown ba chấm.
+
+2. MÃ NGUỒN VÀ TRIỂN KHAI
+
+- Local repository: D:\GITHUB\Task-Work
+- Nhánh chính: main
+- GitHub repository: phamvanhoai/Task-Work
+- Production: https://work.it.id.vn
+- aaPanel production path: /www/wwwroot/work.it.id.vn
+- Web server: Apache
+- PHP production: 8.4
+- Laravel production: 13.25.0
+- Auto deploy đang hoạt động: push commit lên main sẽ tự cập nhật server aaPanel.
+- Luôn chạy test/build trước khi commit và xác nhận server đã nhận đúng commit sau khi push.
+- Không commit file .env, database dump, mật khẩu, SSH key, FTP credential hoặc Zalo Bot token.
+
+Thông tin kết nối local nằm trong ANTIGRAVITY_SECRETS.txt (đã được .gitignore). Chỉ đọc khi thật sự cần; tuyệt đối không in, commit hoặc đẩy file này lên remote.
+
+3. CÁC LỆNH PHÁT TRIỂN/VERIFY
+
+Trong thư mục project:
+
+  vendor\bin\pint
+  php artisan test
+  npm run build
+  git diff --check
+  git status --short
+  git add <files>
+  git commit -m "<message>"
+  git push
+
+4. TỔNG QUAN TÍNH NĂNG ĐÃ CÓ
+
+- Dashboard.
+- Công việc: danh sách, lọc, sắp xếp, quá hạn, pagination, search/reset, modal tạo/sửa/xóa.
+- Kanban: kéo thả giữa cột; kéo vào chính cột để đổi trạng thái; hỗ trợ đổi vị trí task trong cùng cột.
+- Gantt.
+- Dự án và trang chi tiết dự án.
+- Lịch công việc.
+- Báo cáo.
+- Thành viên: tìm kiếm, lọc, CRUD, dropdown ba chấm, xuất Excel chuẩn cột.
+- Nhãn: CRUD, dropdown ba chấm.
+- Cài đặt: profile, account, notification, interface, time management, security, backup/sync, integration, team/permissions, custom fields, default labels, task templates, trash.
+- Notification trong ứng dụng.
+- Zalo Bot: thông báo cá nhân và nhóm; webhook, liên kết private/group chat, task create/update/delete/status, deadline gần tới hạn. Token chỉ ở .env trên server/local, tuyệt đối không ghi ra source.
+- Xuất task theo mẫu Excel “Report3_Project Tracking.xlsx”, có sheet WBS / Issues / Defects / Q&A.
+
+5. DỮ LIỆU SẢN XUẤT HIỆN TẠI
+
+Toàn bộ project/task cũ đã được xóa chủ động. Chỉ còn 5 user team hiện tại:
+
+- Pham Van Hoai — admin/leader — email hoaipvce181744@fpt.edu.vn — phone 0333622144
+- Le Thinh — member — email thinhlce180136@fpt.edu.vn — phone 0913987736
+- Le Dang Khoa — member — email khoaldce181030@fpt.edu.vn — phone 0855001070
+- Doan Thi Yen Nhi — member — email yennhi@taskwork.local — phone trống
+- Nguyen Chi Duong — member — email duongncce180374@fpt.edu.vn — phone 07633388151
+
+Không tự xóa/reset dữ liệu production nếu không có yêu cầu rõ ràng từ user. Dữ liệu hiện không có project/task là trạng thái có chủ đích.
+
+6. THAY ĐỔI MỚI NHẤT
+
+Commit mới nhất tại thời điểm bàn giao: 923ab8d — Remove upgrade experience sidebar card.
+
+Trước đó: c565852 — Complete member profile forms.
+
+Mục “Nâng cấp trải nghiệm” đã được xóa khỏi sidebar, cùng CSS liên quan.
+
+Form tạo và sửa thành viên đã có đầy đủ các trường:
+
+- Họ tên (name)
+- Email
+- Số điện thoại (phone)
+- Chức danh (job_title)
+- Vai trò (role: admin/member)
+- Múi giờ (timezone: Asia/Ho_Chi_Minh, Asia/Bangkok, UTC)
+- Ngôn ngữ (locale: vi/en)
+- Giới thiệu (bio)
+- Mật khẩu/mật khẩu mới
+
+Khi bấm sửa, form tự điền toàn bộ dữ liệu cũ. Modal có body cuộn riêng để nút Lưu/Hủy luôn thấy được.
+
+Các file chính liên quan:
+
+- app/Http/Controllers/WorkspaceController.php
+- resources/views/workspace/members.blade.php
+- resources/js/app.js
+- resources/css/app.css
+- tests/Feature/ExampleTest.php
+
+7. CHẤT LƯỢNG VÀ QUY ƯỚC
+
+- Lần kiểm thử gần nhất: 22 tests passed, 89 assertions.
+- UI phải rõ chữ, kích thước đồng bộ, responsive, có trạng thái active/hover/transition hợp lý.
+- Không dùng icon tự vẽ bằng ký tự; dùng lucide icon hoặc SVG đáng tin cậy.
+- Không dùng native browser alert/confirm; dùng modal/toast của ứng dụng.
+- Với dropdown ba chấm, kiểm tra z-index/vị trí để popover hiển thị đúng và không bị che.
+- Khi thêm field vào form: cập nhật validation ở controller, $fillable/model nếu cần, UI create/edit, JS nạp dữ liệu edit, test feature, và export nếu yêu cầu liên quan.
+- Tôn trọng thay đổi đang có trong working tree; không git reset --hard hoặc git checkout -- nếu chưa được user yêu cầu.
+
+8. CÁCH LÀM VIỆC MONG MUỐN
+
+- Đọc code liên quan trước khi sửa.
+- Sửa tối thiểu nhưng hoàn chỉnh, không tạo giao diện rời rạc.
+- Mỗi thay đổi code: format, test, build, git diff --check; sau đó commit/push nếu user yêu cầu hoặc workflow đã được user chấp thuận.
+- Báo lại ngắn gọn bằng tiếng Việt: đã sửa gì, test nào đã chạy, commit nào và server đã deploy chưa.
+- Không tiết lộ hoặc in ra credential dưới bất kỳ dạng nào.

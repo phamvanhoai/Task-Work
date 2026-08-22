@@ -13,6 +13,7 @@
 /.vscode
 /.zed
 /auth.json
+/ANTIGRAVITY_SECRETS.txt
 /node_modules
 /public/build
 /public/hot

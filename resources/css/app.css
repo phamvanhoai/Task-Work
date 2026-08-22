@@ -27,6 +27,16 @@ body[data-theme="dark"] { color-scheme:dark; background:#0f172a; color:#e2e8f0; 
 body[data-theme="dark"] .app-sidebar,body[data-theme="dark"] .app-stage,body[data-theme="dark"] .topbar,body[data-theme="dark"] .panel,body[data-theme="dark"] .settings-card,body[data-theme="dark"] input,body[data-theme="dark"] select,body[data-theme="dark"] textarea { background-color:#111827!important;color:#e2e8f0!important;border-color:#334155!important; }
 body[data-theme="dark"] .page-content,body[data-theme="dark"] .settings-nav { background:#0f172a;color:#e2e8f0;border-color:#334155; }
 body[data-theme="dark"] tr,body[data-theme="dark"] td,body[data-theme="dark"] th { border-color:#334155!important; }
+body[data-theme="dark"] .modal-card,body[data-theme="dark"] .confirm-card { background-color:#1e293b!important;color:#e2e8f0!important; }
+body[data-theme="dark"] .modal-actions,body[data-theme="dark"] .modal-head { background-color:#1e293b!important;border-color:#334155!important; }
+body[data-theme="dark"] .calendar-filter-panel,body[data-theme="dark"] .project-filter-panel,body[data-theme="dark"] .task-filter-form { background-color:#111827!important;border-color:#334155!important;color:#e2e8f0!important; }
+body[data-theme="dark"] .report-card,body[data-theme="dark"] .member-table-card,body[data-theme="dark"] .dash-side-card,body[data-theme="dark"] .mini-calendar,body[data-theme="dark"] .upcoming-card,body[data-theme="dark"] .calendar-stats,body[data-theme="dark"] .notification-menu { background-color:#111827!important;border-color:#334155!important;color:#e2e8f0!important; }
+body[data-theme="dark"] .label-table td:last-child,body[data-theme="dark"] .label-table th:last-child { background-color:#111827!important; }
+body[data-theme="dark"] .label-table tbody tr:hover td:last-child { background-color:#1e293b!important; }
+body[data-theme="dark"] .kanban-task,body[data-theme="dark"] .task-data-card,body[data-theme="dark"] .mine-table,body[data-theme="dark"] .agenda-day { background-color:#111827!important;border-color:#334155!important;color:#e2e8f0!important; }
+body[data-theme="dark"] .kanban-column,body[data-theme="dark"] .kanban-list { background-color:#0f172a!important; }
+body[data-theme="dark"] .project-card,body[data-theme="dark"] .metric-card,body[data-theme="dark"] .summary-card,body[data-theme="dark"] .mine-stats article { background-color:#111827!important;border-color:#334155!important;color:#e2e8f0!important; }
+body[data-theme="dark"] .notification-item:hover,body[data-theme="dark"] .label-table tbody tr:hover { background-color:#1e293b!important; }
 .density-compact .page-content { font-size:90%; }.density-compact td { padding-top:8px!important;padding-bottom:8px!important; }.density-comfortable td { padding-top:20px!important;padding-bottom:20px!important; }
 .fullscreen-tasks #task-modal,.fullscreen-tasks #task-edit-modal { width:calc(100vw - 24px);max-width:none; }.fullscreen-tasks #task-modal .modal-card,.fullscreen-tasks #task-edit-modal .modal-card { height:calc(100dvh - 24px);max-height:none; }
 .user-avatar img,.profile-photo .avatar img { width:100%;height:100%;border-radius:inherit;object-fit:cover; }.card-heading { display:flex;align-items:flex-start;justify-content:space-between;gap:12px; }.text-action { border:0;background:transparent;color:#4f46e5;font-size:11px;cursor:pointer;white-space:nowrap; }
@@ -64,6 +74,11 @@ body .notification-menu { z-index:90; }
     .page-content { @apply min-h-[calc(100vh-69px)] bg-white px-7 pb-10 pt-6; }.page-heading { @apply mb-5 flex items-center justify-between; }.page-heading h1 { @apply m-0 text-[22px] font-semibold tracking-tight; }.page-heading p { @apply mt-1 text-[10px] text-slate-500; }.heading-actions { @apply flex gap-2.5; }
     .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 active:scale-[.98]; }
     .btn.primary { @apply border-brand-600 bg-brand-600 text-white hover:bg-brand-700; }
+    .alert { @apply mb-4 rounded-lg border px-4 py-3 text-sm; }
+    .alert.success { @apply border-emerald-200 bg-emerald-50 text-emerald-700; }
+    .alert.error { @apply border-red-200 bg-red-50 text-red-700; }
+    .alert ul { @apply mt-1 list-inside list-disc text-xs; }
+    .alert b { @apply font-semibold; }
     .panel { @apply rounded-lg border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,.03)]; }
     .panel-head, .card-head { @apply mb-4 flex items-center justify-between; }
     .panel-head h2, .card-head h3 { @apply m-0 text-xs font-semibold text-slate-900; }
@@ -143,10 +158,14 @@ body .notification-menu { z-index:90; }
 
 @media (max-width: 1200px) {
     .metric-grid,.stats { @apply grid-cols-2; }.dashboard-layout { @apply grid-cols-1; }.dashboard-side-column { @apply grid grid-cols-3; }.project-grid { @apply grid-cols-2; }
+    .report-metrics,.member-metrics { grid-template-columns:repeat(3,1fr); }
+    .mine-stats { grid-template-columns:repeat(3,1fr); }
+    .report-primary-grid,.report-secondary-grid { grid-template-columns:1fr; }
 }
 @media (max-width: 800px) {
     .app-shell { @apply block; }.app-sidebar { @apply fixed -left-[270px] transition-all duration-300; }.app-sidebar.open { @apply left-0; }.mobile-menu { @apply grid; }.top-search { @apply w-auto flex-1; }.user-meta { @apply hidden; }.page-content { @apply px-4; }
     .metric-grid,.stats,.project-grid,.report-grid,.settings-grid { @apply grid-cols-1; }.kanban { @apply flex overflow-x-auto; }.kanban-col { @apply min-w-64; }.calendar-layout,.label-layout { @apply grid-cols-1; }.form-grid,.profile-fields { @apply grid-cols-1; }.span-2,.profile-fields .wide { @apply col-span-1; }
+    .report-metrics,.member-metrics,.mine-stats { grid-template-columns:repeat(2,1fr); }
 }
 
 .chart-key { @apply text-center text-[8px] text-slate-500; }.chart-key i { @apply inline-block size-2 rounded-full bg-emerald-500; }.distribution { @apply flex items-center gap-4; }.distribution .donut { @apply shrink-0; }.distribution p { @apply my-2 text-[8px] text-slate-600; }

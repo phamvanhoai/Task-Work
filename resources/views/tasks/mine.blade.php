@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title','Task của tôi · TaskFlow')
 @section('heading')Task của tôi　<span class="heading-count">{{ $tasks->total() }}</span>@endsection
-@section('actions')<a class="btn primary" href="{{ route('tasks.create') }}"><i data-lucide="plus"></i>Tạo task <i data-lucide="chevron-down"></i></a>@endsection
+@section('actions')<a class="btn primary" href="{{ route('tasks.create') }}"><i data-lucide="plus"></i>Tạo task </a>@endsection
 @section('content')
 @php($total = $statusCounts->sum())
 <div class="mine-tabs">
@@ -18,7 +18,7 @@
 @endforeach
 </section>
 <section class="mine-table"><div class="table-wrap"><table><thead><tr><th><input type="checkbox"></th><th>Task</th><th>Dự án</th><th>Ưu tiên</th><th>Hạn chót</th><th>Trạng thái</th><th>Tag</th><th>Thao tác</th></tr></thead><tbody>
-@forelse($tasks as $task)<tr><td><input type="checkbox"></td><td><a href="{{ route('tasks.edit',$task) }}"><strong>{{ $task->title }}</strong></a></td><td><span class="project-cell"><i style="background:#{{ substr(md5($task->project->key),0,6) }}"></i>{{ $task->project->name }}</span></td><td><span class="priority {{ $task->priority }}">{{ in_array($task->priority,['urgent','high'])?'↑':($task->priority==='low'?'↓':'−') }}　{{ ['urgent'=>'Khẩn cấp','high'=>'Cao','medium'=>'Trung bình','low'=>'Thấp'][$task->priority] }}</span></td><td class="{{ $task->due_date?->isPast()&&$task->status!=='done'?'text-danger':'' }}"><strong>{{ $task->due_date?->format('d/m/Y') ?? '—' }}</strong></td><td><span class="badge {{ $task->status }}">●　{{ ['todo'=>'Việc cần làm','in_progress'=>'Đang thực hiện','review'=>'Đang review','done'=>'Hoàn thành'][$task->status] }}</span></td><td><span class="task-label">{{ ['urgent'=>'Quan trọng','high'=>'UI/UX','medium'=>'Research','low'=>'Testing'][$task->priority] }}</span></td><td>@include('tasks.partials.actions', ['task' => $task])</td></tr>
+@forelse($tasks as $task)<tr><td><input type="checkbox"></td><td><a href="{{ route('tasks.edit',$task) }}"><strong>{{ $task->title }}</strong></a></td><td><span class="project-cell"><i style="background:#{{ substr(md5($task->project->key),0,6) }}"></i>{{ $task->project->name }}</span></td><td><span class="priority {{ $task->priority }}">{{ in_array($task->priority,['urgent','high'])?'↑':($task->priority==='low'?'↓':'−') }}　{{ ['urgent'=>'Khẩn cấp','high'=>'Cao','medium'=>'Trung bình','low'=>'Thấp'][$task->priority] }}</span></td><td class="{{ $task->due_date?->isPast()&&$task->status!=='done'?'text-danger':'' }}"><strong>{{ $task->due_date?->format('d/m/Y') ?? '—' }}</strong></td><td><span class="badge {{ $task->status }}"><i class="status-dot"></i> {{ ['todo'=>'Việc cần làm','in_progress'=>'Đang thực hiện','review'=>'Đang review','done'=>'Hoàn thành'][$task->status] }}</span></td><td><span class="task-label">{{ $task->labels->first()?->name ?? '—' }}</span></td><td>@include('tasks.partials.actions', ['task' => $task])</td></tr>
 @empty<tr><td colspan="8" class="empty">Bạn chưa có task phù hợp với bộ lọc.</td></tr>@endforelse
 </tbody></table></div>@include('tasks.partials.pagination', ['paginator'=>$tasks])</section>
 @include('tasks.partials.modal')
